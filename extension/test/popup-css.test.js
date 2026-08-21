@@ -68,3 +68,30 @@ test('no layout values are inlined in the markup', () => {
 
   assert.deepEqual(inline, [], `inline styles in popup.html: ${inline.join(' | ')}`);
 });
+
+test('a mono font token exists', () => {
+  assert.match(css, /--font-mono:/);
+});
+
+test('filenames are set in the mono stack', () => {
+  // The row-to-row discriminator is a bitrate inside the filename; a
+  // proportional face never aligns the differing digits.
+  const rule = /\.url-filename\s*\{([\s\S]*?)\}/.exec(css);
+
+  assert.ok(rule, 'no .url-filename rule found');
+  assert.match(rule[1], /font-family:\s*var\(--font-mono\)/);
+});
+
+test('filenames use tabular figures', () => {
+  const rule = /\.url-filename\s*\{([\s\S]*?)\}/.exec(css);
+
+  assert.match(rule[1], /font-variant-numeric:\s*tabular-nums/);
+});
+
+test('filenames break at boundaries before breaking mid-token', () => {
+  // break-all shatters a name even where a boundary break would have fitted.
+  const rule = /\.url-filename\s*\{([\s\S]*?)\}/.exec(css);
+
+  assert.doesNotMatch(rule[1], /word-break:\s*break-all/);
+  assert.match(rule[1], /overflow-wrap:\s*anywhere/);
+});
