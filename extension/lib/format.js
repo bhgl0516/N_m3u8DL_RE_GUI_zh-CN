@@ -78,21 +78,37 @@ export function elideUrl(url, max = 40) {
 }
 
 /**
- * Produces a concise descriptor for a stream item (e.g. "HLS", "Media · 1.0 GB", "HLS · guess").
+ * Produces a human-readable role explanation for a stream item.
+ */
+export function describeRole(item) {
+  if (!item) return '';
+  if (item.confidence === 'low') {
+    return 'Might not be a video';
+  }
+  switch (item.kind) {
+    case 'HLS':
+    case 'DASH':
+    case 'MSS':
+      return 'Video + audio · every quality';
+    case 'Media':
+      return 'Video only · one quality';
+    case 'Audio':
+      return 'Audio only';
+    case 'Abyss':
+      return 'Player page · try Copy as cURL';
+    default:
+      return 'Stream';
+  }
+}
+
+/**
+ * Produces a concise descriptor for a stream item leading with its role.
  */
 export function describeStream(item) {
   if (!item) return '';
 
-  const parts = [item.kind || 'Media'];
-
-  if (item.confidence === 'low') {
-    parts.push('guess');
-  }
-
+  const role = describeRole(item);
   const size = formatBytes(item.sizeBytes, Boolean(item.isPartial));
-  if (size) {
-    parts.push(size);
-  }
 
-  return parts.join(' · ');
+  return [role, size].filter(Boolean).join(' · ');
 }

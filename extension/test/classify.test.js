@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { classify } from '../lib/classify.js';
+import { classify, KIND_TITLES } from '../lib/classify.js';
 
 test('recognises an HLS manifest', () => {
   assert.deepEqual(classify('https://cdn.example.com/hls/master.m3u8', null, 200, 'xmlhttprequest'), { kind: 'HLS', confidence: 'high' });
@@ -212,7 +212,9 @@ test('an .aac with no content type stays a segment', () => {
   assert.equal(classify('https://cdn.example.com/hls/seg-1.aac', null, 200, 'media'), null);
 });
 
-test('audio ranks below video for the same tab', () => {
-  // Guard for the popup ordering added in step 3.
-  assert.ok(true);
+test('every kind the classifier can return has a title expansion', () => {
+  // A badge with no tooltip is an acronym with no way in.
+  for (const kind of ['HLS', 'DASH', 'MSS', 'Media', 'Audio', 'Abyss']) {
+    assert.ok(KIND_TITLES[kind], `no KIND_TITLES entry for ${kind}`);
+  }
 });

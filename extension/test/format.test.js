@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
+import { formatBytes, formatRelativeTime, elideUrl, describeRole, describeStream } from '../lib/format.js';
 
 test('formatBytes scales through the units', () => {
   assert.equal(formatBytes(0), '0 B');
@@ -44,30 +44,53 @@ test('elideUrl leaves a short URL alone', () => {
   assert.equal(elideUrl('https://a.co/b.m3u8', 40), 'https://a.co/b.m3u8');
 });
 
-test('describeStream leads with the kind', () => {
+test('a manifest is described as carrying every quality', () => {
+  assert.equal(describeRole({ kind: 'HLS' }), 'Video + audio · every quality');
+  assert.equal(describeRole({ kind: 'DASH' }), 'Video + audio · every quality');
+  assert.equal(describeRole({ kind: 'MSS' }), 'Video + audio · every quality');
+});
+
+test('a progressive file is described as one fixed quality', () => {
+  assert.equal(describeRole({ kind: 'Media' }), 'Video only · one quality');
+});
+
+test('an audio stream says so plainly', () => {
+  assert.equal(describeRole({ kind: 'Audio' }), 'Audio only');
+});
+
+test('a low-confidence result leads with the doubt', () => {
+  // The amber "guess" badge says nothing about what to do. This does.
+  assert.equal(describeRole({ kind: 'HLS', confidence: 'low' }), 'Might not be a video');
+});
+
+test('an Abyss player page is described as a page, not a stream', () => {
+  assert.equal(describeRole({ kind: 'Abyss' }), 'Player page · try Copy as cURL');
+});
+
+test('an unknown kind falls back rather than throwing', () => {
+  assert.equal(describeRole({ kind: 'Mystery' }), 'Stream');
+  assert.equal(describeRole(null), '');
+});
+
+test('describeStream leads with the role, not the acronym', () => {
+  // The kind is already the loudest element on the card; repeating it two
+  // centimetres below spends the one line that could teach something.
   assert.equal(
     describeStream({ kind: 'HLS', confidence: 'high', sizeBytes: null }),
-    'HLS'
+    'Video + audio · every quality'
   );
 });
 
-test('describeStream appends a size when one is known', () => {
+test('describeStream still appends a known size', () => {
   assert.equal(
     describeStream({ kind: 'Media', confidence: 'high', sizeBytes: 1073741824 }),
-    'Media · 1.0 GB'
+    'Video only · one quality · 1.0 GB'
   );
 });
 
-test('describeStream marks a low-confidence guess', () => {
-  assert.equal(
-    describeStream({ kind: 'HLS', confidence: 'low', sizeBytes: null }),
-    'HLS · guess'
-  );
-});
-
-test('describeStream carries the approximate marker through', () => {
+test('describeStream keeps the approximate marker on a partial size', () => {
   assert.equal(
     describeStream({ kind: 'Media', confidence: 'high', sizeBytes: 5242880, isPartial: true }),
-    'Media · ~5.0 MB'
+    'Video only · one quality · ~5.0 MB'
   );
 });

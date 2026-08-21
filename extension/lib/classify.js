@@ -3,6 +3,17 @@
  * cleanly under `node --test`.
  */
 
+/** Expansions shown on hover. The badge is the loudest element on a card and
+ *  currently the least explained. */
+export const KIND_TITLES = {
+  HLS: 'HTTP Live Streaming — Apple’s adaptive format (.m3u8)',
+  DASH: 'MPEG-DASH — the adaptive format most non-Apple players use (.mpd)',
+  MSS: 'Smooth Streaming — Microsoft’s adaptive format',
+  Media: 'A single video file, already at one fixed quality',
+  Audio: 'An audio track with no video',
+  Abyss: 'An Abyss / Hydrax player page rather than a stream file'
+};
+
 /** Media segments. Matched on the pathname's extension only — a substring
  *  search hits hostnames and query tokens and silently drops real streams. */
 const SEGMENT_EXTENSIONS = new Set([

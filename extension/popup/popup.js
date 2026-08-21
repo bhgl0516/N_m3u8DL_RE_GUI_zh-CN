@@ -4,6 +4,7 @@
 
 import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, clearTabView, dismissMany, undismissMany } from '../lib/storage.js';
 import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
+import { KIND_TITLES } from '../lib/classify.js';
 import { toCurl, toBatchList } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
 import { rankStreams, groupByOrigin, reconcileSelection, matchesFilter } from '../lib/list-policy.js';
@@ -302,7 +303,16 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
   const kindSpan = document.createElement('span');
   kindSpan.className = `stream-kind ${getKindClass(item.kind)}`;
   kindSpan.textContent = item.kind === 'Abyss' ? '🎬 Abyss / Hydrax' : item.kind;
+  const expansion = KIND_TITLES[item.kind];
+  if (expansion) kindSpan.title = expansion;
   metaLeft.appendChild(kindSpan);
+
+  if (item.confidence === 'low') {
+    const guessBadge = document.createElement('span');
+    guessBadge.className = 'badge-guess';
+    guessBadge.textContent = 'guess';
+    metaLeft.appendChild(guessBadge);
+  }
 
   if (index === 0) {
     const recBadge = document.createElement('span');
@@ -312,11 +322,10 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
   }
 
   const descText = describeStream(item);
-  const descDetails = descText.split(' · ').slice(1);
-  if (descDetails.length > 0) {
+  if (descText) {
     const descSpan = document.createElement('span');
     descSpan.className = 'stream-desc';
-    descSpan.textContent = `· ${descDetails.join(' · ')}`;
+    descSpan.textContent = `· ${descText}`;
     metaLeft.appendChild(descSpan);
   }
 
@@ -375,10 +384,11 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
 
   const copyUrlBtn = document.createElement('button');
   copyUrlBtn.className = 'btn btn-secondary';
-  copyUrlBtn.textContent = 'Copy URL';
-  copyUrlBtn.setAttribute('aria-label', `Copy raw URL for ${item.kind} stream`);
+  copyUrlBtn.textContent = 'URL only';
+  copyUrlBtn.title = 'Copies the address without the Referer, Cookie or User-Agent headers. Most sites reject it.';
+  copyUrlBtn.setAttribute('aria-label', `Copy the ${item.kind} URL without headers`);
   copyUrlBtn.addEventListener('click', async () => {
-    await copyWithFeedback(copyUrlBtn, item.url, 'Copy URL', 'Copied raw URL to clipboard');
+    await copyWithFeedback(copyUrlBtn, item.url, 'URL only', 'Copied the URL only — no headers.');
   });
 
   actions.appendChild(copyCurlBtn);
