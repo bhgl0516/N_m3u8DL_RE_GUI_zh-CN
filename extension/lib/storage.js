@@ -17,7 +17,7 @@ const MAX_RECENT = 30;
 const MAX_DISMISSED_PER_TAB = 200;
 
 const tabKeyFor = (tabId) => `tab_${tabId}`;
-const dismissedKeyFor = (tabId) => `${DISMISSED_PREFIX}${tabId}`;
+const dismissedKeyFor = (tabId) => (tabId && tabId > 0 ? `${DISMISSED_PREFIX}${tabId}` : `${DISMISSED_PREFIX}none`);
 
 /** Kinds that are a download target in their own right. A tab holding one of
  *  these is watching a stream, so anything media-shaped alongside it is one of
@@ -41,54 +41,115 @@ function serialize(task) {
 }
 
 /**
- * Returns the set of dismissed URLs for a tab.
+ * Returns the set of dismissed URLs for a tab (or for orphan/no-tab streams when null).
  */
 export async function getDismissed(tabId) {
-  if (!tabId || tabId <= 0) return new Set();
   const key = dismissedKeyFor(tabId);
   const data = await chrome.storage.session.get([key]);
   return new Set(data[key] || []);
 }
 
 /**
- * Dismisses a set of URLs for a specific tab so they do not immediately
- * reappear on subsequent requests while playback continues.
- * Also removes the dismissed streams from the active tab list and recent list.
+ * Dismisses a list of items against their source tab IDs (or dismissed_none if tabId is null).
+ * Also removes the dismissed streams from the corresponding tab list and recent list.
  */
-export function dismissStreams(tabId, urls) {
-  if (!tabId || tabId <= 0 || !Array.isArray(urls) || urls.length === 0) {
+export function dismissMany(items) {
+  if (!Array.isArray(items) || items.length === 0) {
     return Promise.resolve();
   }
   return serialize(async () => {
-    const key = dismissedKeyFor(tabId);
-    const tabKey = tabKeyFor(tabId);
-    const data = await chrome.storage.session.get([key, tabKey, RECENT_KEY]);
+    const byTab = new Map();
+    for (const item of items) {
+      if (!item || !item.url) continue;
+      const tid = item.tabId && item.tabId > 0 ? item.tabId : null;
+      if (!byTab.has(tid)) byTab.set(tid, []);
+      byTab.get(tid).push(item.url);
+    }
 
-    const existing = data[key] || [];
-    const set = new Set(existing);
-    const urlSet = new Set();
-    for (const u of urls) {
-      if (u) {
-        set.add(u);
-        urlSet.add(u);
+    const allKeys = [RECENT_KEY];
+    for (const tid of byTab.keys()) {
+      allKeys.push(dismissedKeyFor(tid));
+      if (tid) allKeys.push(tabKeyFor(tid));
+    }
+
+    const data = await chrome.storage.session.get(allKeys);
+    const patch = {};
+    let currentRecent = data[RECENT_KEY] || [];
+
+    for (const [tid, urls] of byTab) {
+      const dKey = dismissedKeyFor(tid);
+      const existingDismissed = data[dKey] || [];
+      const set = new Set(existingDismissed);
+      const urlSet = new Set();
+      for (const u of urls) {
+        if (u) {
+          set.add(u);
+          urlSet.add(u);
+        }
       }
+      let array = Array.from(set);
+      if (array.length > MAX_DISMISSED_PER_TAB) {
+        array = array.slice(-MAX_DISMISSED_PER_TAB);
+      }
+      patch[dKey] = array;
+
+      if (tid) {
+        const tKey = tabKeyFor(tid);
+        const currentTabList = data[tKey] || [];
+        patch[tKey] = currentTabList.filter((s) => !urlSet.has(s.url));
+      }
+
+      currentRecent = currentRecent.filter((s) => {
+        if (tid) {
+          return !(s.tabId === tid && urlSet.has(s.url));
+        }
+        return !((!s.tabId || s.tabId <= 0) && urlSet.has(s.url));
+      });
     }
-    let array = Array.from(set);
-    if (array.length > MAX_DISMISSED_PER_TAB) {
-      array = array.slice(-MAX_DISMISSED_PER_TAB);
+
+    patch[RECENT_KEY] = currentRecent;
+    await chrome.storage.session.set(patch);
+  });
+}
+
+/**
+ * Dismisses a set of URLs for a specific tab so they do not immediately
+ * reappear on subsequent requests while playback continues.
+ */
+export function dismissStreams(tabId, urls) {
+  return dismissMany((urls || []).map((u) => ({ url: u, tabId })));
+}
+
+/**
+ * Undismisses a list of items by removing them from the respective dismissed sets.
+ */
+export function undismissMany(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return Promise.resolve();
+  }
+  return serialize(async () => {
+    const byTab = new Map();
+    for (const item of items) {
+      if (!item || !item.url) continue;
+      const tid = item.tabId && item.tabId > 0 ? item.tabId : null;
+      if (!byTab.has(tid)) byTab.set(tid, []);
+      byTab.get(tid).push(item.url);
     }
 
-    const currentTabList = data[tabKey] || [];
-    const updatedTabList = currentTabList.filter((s) => !urlSet.has(s.url));
+    const allKeys = Array.from(byTab.keys()).map((tid) => dismissedKeyFor(tid));
+    const data = await chrome.storage.session.get(allKeys);
+    const patch = {};
 
-    const currentRecent = data[RECENT_KEY] || [];
-    const updatedRecent = currentRecent.filter((s) => !(s.tabId === tabId && urlSet.has(s.url)));
+    for (const [tid, urls] of byTab) {
+      const dKey = dismissedKeyFor(tid);
+      const current = data[dKey] || [];
+      const urlSet = new Set(urls);
+      patch[dKey] = current.filter((u) => !urlSet.has(u));
+    }
 
-    await chrome.storage.session.set({
-      [key]: array,
-      [tabKey]: updatedTabList,
-      [RECENT_KEY]: updatedRecent
-    });
+    if (Object.keys(patch).length > 0) {
+      await chrome.storage.session.set(patch);
+    }
   });
 }
 
@@ -99,23 +160,26 @@ export function dismissStreams(tabId, urls) {
 export function addStream(tabId, item) {
   return serialize(async () => {
     const effectiveTabId = tabId && tabId > 0 ? tabId : null;
-    const dismissedKey = effectiveTabId ? dismissedKeyFor(effectiveTabId) : null;
+    const dismissedKey = dismissedKeyFor(effectiveTabId);
     const keys = effectiveTabId
       ? [tabKeyFor(effectiveTabId), RECENT_KEY, dismissedKey]
-      : [RECENT_KEY];
+      : [RECENT_KEY, dismissedKey];
 
     // Scoped read: pulling the whole area back on every detection is O(all tabs).
     const data = await chrome.storage.session.get(keys);
     const patch = {};
     let tabCount = 0;
 
-    if (effectiveTabId) {
-      const dismissed = new Set(data[dismissedKey] || []);
-      if (dismissed.has(item.url)) {
+    const dismissed = new Set(data[dismissedKey] || []);
+    if (dismissed.has(item.url)) {
+      if (effectiveTabId) {
         const currentList = data[tabKeyFor(effectiveTabId)] || [];
         return currentList.length;
       }
+      return 0;
+    }
 
+    if (effectiveTabId) {
       const key = tabKeyFor(effectiveTabId);
       let list = data[key] || [];
 
@@ -144,13 +208,6 @@ export function addStream(tabId, item) {
 
     let recent = data[RECENT_KEY] || [];
     const incomingIsManifest = isManifest(item);
-
-    if (effectiveTabId) {
-      const dismissed = new Set(data[dismissedKey] || []);
-      if (dismissed.has(item.url)) {
-        return tabCount;
-      }
-    }
 
     // M3: When a manifest arrives on a tab, purge earlier media segments from that tab in recent_streams
     if (incomingIsManifest && effectiveTabId) {
@@ -190,6 +247,22 @@ export function clearTab(tabId) {
 }
 
 /**
+ * Clears streams for a specific tab view and prunes only that tab's streams from recent_streams.
+ */
+export function clearTabView(tabId) {
+  if (!tabId || tabId <= 0) return Promise.resolve();
+  return serialize(async () => {
+    const tabKey = tabKeyFor(tabId);
+    const all = await chrome.storage.session.get(null);
+    const currentRecent = all[RECENT_KEY] || [];
+    const filteredRecent = currentRecent.filter((s) => s.tabId !== tabId);
+
+    await chrome.storage.session.remove([tabKey]);
+    await chrome.storage.session.set({ [RECENT_KEY]: filteredRecent });
+  });
+}
+
+/**
  * Retrieves cached probe variants for a manifest URL, respecting TTL.
  */
 export async function getCachedVariants(url, now = Date.now()) {
@@ -225,6 +298,7 @@ export function setCachedVariants(url, result, now = Date.now()) {
 
 /**
  * Clears all tab streams, recent streams list, and variant caches in a serialized transaction.
+ * Deliberately preserves dismissed sets so still-playing tabs do not refill.
  */
 export function clearAll() {
   return serialize(async () => {
@@ -255,7 +329,7 @@ export function sweepOrphanTabs(liveTabIds) {
     const stale = Object.keys(all).filter(
       (key) =>
         (key.startsWith('tab_') && !liveTabKeys.has(key)) ||
-        (key.startsWith(DISMISSED_PREFIX) && !liveDismissedKeys.has(key))
+        (key.startsWith(DISMISSED_PREFIX) && key !== `${DISMISSED_PREFIX}none` && !liveDismissedKeys.has(key))
     );
     if (stale.length > 0) {
       await chrome.storage.session.remove(stale);

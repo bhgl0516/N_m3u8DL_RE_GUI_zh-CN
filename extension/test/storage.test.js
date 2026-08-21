@@ -12,6 +12,7 @@ const {
   getCachedVariants,
   setCachedVariants,
   dismissStreams,
+  dismissMany,
   getDismissed
 } = await import('../lib/storage.js');
 
@@ -20,6 +21,11 @@ const TAB = 7;
 const stream = (url, kind) => ({
   url, kind, referer: null, userAgent: null, cookie: null,
   origin: null, tabId: TAB, timestamp: Date.now()
+});
+
+const s = (url, kind = 'HLS') => ({
+  url, kind, confidence: 'high', referer: null, userAgent: null,
+  cookie: null, origin: null, sizeBytes: null, tabId: TAB, timestamp: Date.now()
 });
 
 beforeEach(() => fake.reset());
@@ -280,4 +286,77 @@ test('clearTab also drops that tab dismissals', async () => {
   await clearTab(TAB);
 
   assert.equal((await getDismissed(TAB)).size, 0);
+});
+
+test('dismissMany records each URL against its own tab', async () => {
+  await dismissMany([
+    { url: 'https://a/1.m3u8', tabId: 7 },
+    { url: 'https://a/2.m3u8', tabId: 9 }
+  ]);
+
+  assert.ok((await getDismissed(7)).has('https://a/1.m3u8'));
+  assert.ok((await getDismissed(9)).has('https://a/2.m3u8'));
+});
+
+test('dismissMany does not cross-contaminate tabs', async () => {
+  await dismissMany([{ url: 'https://a/1.m3u8', tabId: 7 }]);
+
+  assert.equal((await getDismissed(9)).size, 0);
+});
+
+test('clearing All Recent stops every source tab refilling it', async () => {
+  // The reported failure: recent_streams holds items from many tabs, and
+  // dismissing them all under the active tab left every other tab free to
+  // re-add its own.
+  await addStream(7, { ...s('https://a/1.m3u8'), tabId: 7 });
+  await addStream(9, { ...s('https://a/2.m3u8'), tabId: 9 });
+
+  const recent = await getRecentStreams();
+  await dismissMany(recent.map((x) => ({ url: x.url, tabId: x.tabId })));
+
+  await addStream(7, { ...s('https://a/1.m3u8'), tabId: 7 });
+  await addStream(9, { ...s('https://a/2.m3u8'), tabId: 9 });
+
+  assert.deepEqual(await getRecentStreams(), []);
+});
+
+test('dismissMany groups so one tab is written once', async () => {
+  await dismissMany([
+    { url: 'https://a/1.m3u8', tabId: 7 },
+    { url: 'https://a/2.m3u8', tabId: 7 },
+    { url: 'https://a/3.m3u8', tabId: 7 }
+  ]);
+
+  assert.equal((await getDismissed(7)).size, 3);
+});
+
+test('dismissMany with an empty list is a no-op', async () => {
+  await dismissMany([]);
+});
+
+test('a stream with no tab can be dismissed', async () => {
+  const url = 'https://cdn.example.com/orphan.m3u8';
+  await addStream(-1, { ...s(url), tabId: null });
+  await dismissStreams(null, [url]);
+
+  await addStream(-1, { ...s(url), tabId: null });
+
+  assert.deepEqual(await getRecentStreams(), []);
+});
+
+test('a no-tab dismissal does not suppress the same URL on a real tab', async () => {
+  const url = 'https://cdn.example.com/shared.m3u8';
+  await dismissStreams(null, [url]);
+
+  await addStream(7, { ...s(url), tabId: 7 });
+
+  assert.equal((await getTabStreams(7)).length, 1);
+});
+
+test('clearAll leaves the no-tab dismissal in place', async () => {
+  await dismissStreams(null, ['https://cdn.example.com/orphan.m3u8']);
+
+  await clearAll();
+
+  assert.equal((await getDismissed(null)).size, 1);
 });
