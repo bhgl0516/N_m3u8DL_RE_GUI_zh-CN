@@ -2,7 +2,7 @@
  * N-RE Stream Bridge — Popup Logic
  */
 
-import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll } from '../lib/storage.js';
+import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, dismissStreams } from '../lib/storage.js';
 import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
 import { toCurl, toBatchList } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
@@ -565,12 +565,23 @@ async function init() {
   });
 
   document.getElementById('btn-clear').addEventListener('click', async () => {
+    const { streams } = await loadStreams();
+
     selectedUrls.clear();
     variantsCache.clear();
     expandedQualities.clear();
+
+    // Dismiss before clearAll: clearAll drops dismissals too, so the reverse
+    // order erases the dismissal it was meant to record.
+    if (activeTabId && streams.length > 0) {
+      await dismissStreams(activeTabId, streams.map((s) => s.url));
+    }
     await clearAll();
+
     renderStreams();
-    showToast('Cleared stream list');
+    showToast(streams.length > 0
+      ? `Cleared ${streams.length} stream(s)`
+      : 'Nothing to clear');
   });
 
   // Bulk bar actions
