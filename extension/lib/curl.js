@@ -29,9 +29,28 @@ export function toBatchList(streams) {
   if (!streams || !Array.isArray(streams) || streams.length === 0) return '';
 
   const lines = [];
-  const firstWithReferer = streams.find((s) => s && s.referer);
-  if (firstWithReferer && firstWithReferer.referer) {
-    lines.push(`# Referer: ${firstWithReferer.referer}`);
+
+  // Check for differing Referers
+  const referers = new Set(streams.map((s) => s && s.referer).filter(Boolean));
+  if (referers.size > 1) {
+    lines.push('# note: Selected streams originate from different Referers; using first');
+  }
+
+  // Find first stream with any captured headers
+  const firstWithHeaders = streams.find(
+    (s) => s && (s.referer || s.userAgent || s.cookie || s.origin)
+  );
+
+  if (firstWithHeaders) {
+    const headerParts = [];
+    if (firstWithHeaders.referer) headerParts.push(`Referer: ${firstWithHeaders.referer}`);
+    if (firstWithHeaders.userAgent) headerParts.push(`User-Agent: ${firstWithHeaders.userAgent}`);
+    if (firstWithHeaders.cookie) headerParts.push(`Cookie: ${firstWithHeaders.cookie}`);
+    if (firstWithHeaders.origin) headerParts.push(`Origin: ${firstWithHeaders.origin}`);
+
+    if (headerParts.length > 0) {
+      lines.push(`# nre-headers: ${headerParts.join('\\n')}`);
+    }
   }
 
   for (const s of streams) {

@@ -8,6 +8,9 @@
  */
 
 const RECENT_KEY = 'recent_streams';
+const VARIANTS_CACHE_PREFIX = 'variants_';
+const FAILURE_TTL_MS = 30 * 1000; // 30 seconds for failed probes
+const SUCCESS_TTL_MS = 60 * 60 * 1000; // 1 hour for successful probes
 const MAX_PER_TAB = 25;
 const MAX_RECENT = 30;
 
@@ -116,12 +119,48 @@ export function clearTab(tabId) {
 }
 
 /**
- * Clears all tab streams and the recent streams list in a serialized transaction.
+ * Retrieves cached probe variants for a manifest URL, respecting TTL.
+ */
+export async function getCachedVariants(url, now = Date.now()) {
+  if (!url) return null;
+  const key = `${VARIANTS_CACHE_PREFIX}${url}`;
+  const data = await chrome.storage.session.get([key]);
+  const entry = data[key];
+  if (!entry) return null;
+
+  const ttl = entry.error ? FAILURE_TTL_MS : SUCCESS_TTL_MS;
+  if (now - (entry.timestamp || 0) > ttl) {
+    return null;
+  }
+
+  return { variants: entry.variants || [], error: entry.error || null };
+}
+
+/**
+ * Caches probe variants for a manifest URL in session storage.
+ */
+export function setCachedVariants(url, result, now = Date.now()) {
+  if (!url || !result) return Promise.resolve();
+  const key = `${VARIANTS_CACHE_PREFIX}${url}`;
+  const entry = {
+    variants: result.variants || [],
+    error: result.error || null,
+    timestamp: now
+  };
+  return serialize(async () => {
+    await chrome.storage.session.set({ [key]: entry });
+  });
+}
+
+/**
+ * Clears all tab streams, recent streams list, and variant caches in a serialized transaction.
  */
 export function clearAll() {
   return serialize(async () => {
     const all = await chrome.storage.session.get(null);
-    const keys = Object.keys(all).filter((k) => k.startsWith('tab_') || k === RECENT_KEY);
+    const keys = Object.keys(all).filter(
+      (k) => k.startsWith('tab_') || k.startsWith(VARIANTS_CACHE_PREFIX) || k === RECENT_KEY
+    );
     if (keys.length > 0) {
       await chrome.storage.session.remove(keys);
     }

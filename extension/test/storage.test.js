@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import { installFakeChrome } from './helpers/fake-chrome.js';
 
 const fake = installFakeChrome();
-const { addStream, getTabStreams, getRecentStreams, clearAll } = await import('../lib/storage.js');
+const {
+  addStream,
+  getTabStreams,
+  getRecentStreams,
+  clearAll,
+  getCachedVariants,
+  setCachedVariants
+} = await import('../lib/storage.js');
 
 const TAB = 7;
 
@@ -134,4 +141,50 @@ test('a clear issued mid-detection is not undone by it', async () => {
   await Promise.all([pending, cleared]);
 
   assert.deepEqual(await getRecentStreams(), []);
+});
+
+test('getCachedVariants returns stored variants for a URL within TTL', async () => {
+  const url = 'https://cdn.example.com/m.m3u8';
+  const data = { variants: [{ height: 1080, bandwidth: 5000000 }], error: null };
+  const now = 1000000;
+
+  await setCachedVariants(url, data, now);
+
+  const cached = await getCachedVariants(url, now + 5000);
+  assert.deepEqual(cached, data);
+});
+
+test('getCachedVariants returns null for an expired entry', async () => {
+  const url = 'https://cdn.example.com/m.m3u8';
+  const data = { variants: [{ height: 1080 }], error: null };
+  const now = 1000000;
+
+  await setCachedVariants(url, data, now);
+
+  // 1 hour + 1 second later
+  const cached = await getCachedVariants(url, now + 3600000 + 1000);
+  assert.equal(cached, null);
+});
+
+test('getCachedVariants treats failed probes with shorter TTL', async () => {
+  const url = 'https://cdn.example.com/fail.m3u8';
+  const data = { variants: [], error: 'HTTP 403' };
+  const now = 1000000;
+
+  await setCachedVariants(url, data, now);
+
+  // 10 seconds later: still cached
+  assert.deepEqual(await getCachedVariants(url, now + 10000), data);
+
+  // 35 seconds later: expired
+  assert.equal(await getCachedVariants(url, now + 35000), null);
+});
+
+test('clearAll removes cached variants as well', async () => {
+  const url = 'https://cdn.example.com/m.m3u8';
+  await setCachedVariants(url, { variants: [{ height: 720 }], error: null });
+
+  await clearAll();
+
+  assert.equal(await getCachedVariants(url), null);
 });

@@ -91,4 +91,43 @@ public class CaptureDirectivesTests
         Assert.Single(directives);
         Assert.Equal("1080p", directives["select-video"]);
     }
+
+    [Fact]
+    public void Parse_AcceptsTheDirectiveWithoutASpaceAfterTheHash()
+    {
+        var payload = "#nre-select-video: 1080p";
+        var directives = CaptureDirectives.Parse(payload);
+
+        Assert.Single(directives);
+        Assert.Equal("1080p", directives["select-video"]);
+    }
+
+    [Fact]
+    public void Parse_AcceptsExtraWhitespaceAfterTheHash()
+    {
+        var payload = "#    nre-select-video: 1080p";
+        var directives = CaptureDirectives.Parse(payload);
+
+        Assert.Single(directives);
+        Assert.Equal("1080p", directives["select-video"]);
+    }
+
+    [Fact]
+    public void Parse_StillIgnoresAnOrdinaryComment()
+    {
+        var payload = "# just a comment\n# note: multiple referers";
+        var directives = CaptureDirectives.Parse(payload);
+
+        Assert.Empty(directives);
+    }
+
+    [Fact]
+    public void Parse_ExpandsAnEscapedNewlineInTheValue()
+    {
+        var payload = "# nre-headers: Referer: https://site.com/\\nUser-Agent: Mozilla/5.0";
+        var directives = CaptureDirectives.Parse(payload);
+
+        Assert.Single(directives);
+        Assert.Equal("Referer: https://site.com/\nUser-Agent: Mozilla/5.0", directives["headers"]);
+    }
 }

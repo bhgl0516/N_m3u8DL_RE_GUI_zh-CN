@@ -789,6 +789,12 @@ namespace N_m3u8DL_RE_GUI
 
             if (BatchPasteHelper.LooksLikeBatchList(clipboardText))
             {
+                var directives = CaptureDirectives.Parse(clipboardText);
+                if (directives.TryGetValue("headers", out var headers) && !string.IsNullOrWhiteSpace(headers))
+                {
+                    TextBox_Headers.Text = headers;
+                }
+
                 var batchFile = BatchPasteHelper.WriteTempBatchFile(clipboardText);
                 TextBox_URL.Text = batchFile;
                 SetStatus("Imported batch list — click GO to download.");
@@ -817,6 +823,12 @@ namespace N_m3u8DL_RE_GUI
 
             if (BatchPasteHelper.LooksLikeBatchList(pasted))
             {
+                var directives = CaptureDirectives.Parse(pasted);
+                if (directives.TryGetValue("headers", out var headers) && !string.IsNullOrWhiteSpace(headers))
+                {
+                    TextBox_Headers.Text = headers;
+                }
+
                 var batchFile = BatchPasteHelper.WriteTempBatchFile(pasted);
                 TextBox_URL.Text = batchFile;
                 SetStatus("Imported batch list — click GO to download.");

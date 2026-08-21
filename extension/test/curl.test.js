@@ -103,11 +103,36 @@ test('toBatchList strips a comma from a title so the separator stays unambiguous
   assert.ok(!out.split('\n').find((l) => l.startsWith('Ep 1,'))?.includes('part 2,'));
 });
 
-test('toBatchList records the shared headers as comments', () => {
-  const out = toBatchList([{ url: 'https://x/a.m3u8', referer: 'https://site/' }]);
+test('toBatchList emits headers as a directive, not a bare comment', () => {
+  // BatchInputParser skips '#' lines, so a plain comment reaches nothing.
+  const out = toBatchList([{ url: 'https://x/a.m3u8', referer: 'https://site/', userAgent: 'UA/1' }]);
 
-  // BatchInputParser skips '#' lines, so this is a note to the human only.
-  assert.ok(out.startsWith('#'));
+  assert.ok(out.includes('# nre-headers: Referer: https://site/'));
+  assert.ok(out.includes('User-Agent: UA/1'));
+});
+
+test('toBatchList takes headers from the first entry that has them', () => {
+  const out = toBatchList([
+    { url: 'https://x/a.m3u8' },
+    { url: 'https://x/b.m3u8', referer: 'https://site/' }
+  ]);
+
+  assert.ok(out.includes('# nre-headers: Referer: https://site/'));
+});
+
+test('toBatchList emits no directive when nothing was captured', () => {
+  assert.ok(!toBatchList([{ url: 'https://x/a.m3u8' }]).includes('# nre-'));
+});
+
+test('toBatchList warns when entries disagree on Referer', () => {
+  // One header set applies to the whole batch; say so rather than silently
+  // applying one site's Referer to another site's URL.
+  const out = toBatchList([
+    { url: 'https://a/x.m3u8', referer: 'https://a/' },
+    { url: 'https://b/y.m3u8', referer: 'https://b/' }
+  ]);
+
+  assert.ok(out.includes('# note:'));
 });
 
 test('toBatchList returns empty for an empty selection', () => {

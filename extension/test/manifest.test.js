@@ -62,6 +62,33 @@ test('parseHlsMaster skips a STREAM-INF with no URI line', () => {
   assert.deepEqual(parseHlsMaster(text, MASTER_URL), []);
 });
 
+test('an orphaned STREAM-INF does not steal the next variant URL', () => {
+  // Picking 1080p must not silently download 720p.
+  const text = [
+    '#EXTM3U',
+    '#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080',
+    '#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720',
+    '720p/index.m3u8'
+  ].join('\n');
+
+  const variants = parseHlsMaster(text, MASTER_URL);
+
+  assert.equal(variants.length, 1);
+  assert.equal(variants[0].height, 720);
+  assert.equal(variants[0].url, 'https://cdn.example.com/hls/720p/index.m3u8');
+});
+
+test('a comment between a STREAM-INF and its URI is skipped', () => {
+  const text = [
+    '#EXTM3U',
+    '#EXT-X-STREAM-INF:BANDWIDTH=1,RESOLUTION=640x360',
+    '# a note from the packager',
+    '360p/index.m3u8'
+  ].join('\n');
+
+  assert.equal(parseHlsMaster(text, MASTER_URL)[0].url, 'https://cdn.example.com/hls/360p/index.m3u8');
+});
+
 test('parseHlsMaster handles CRLF line endings', () => {
   const text = '#EXTM3U\r\n#EXT-X-STREAM-INF:BANDWIDTH=1,RESOLUTION=640x360\r\na.m3u8\r\n';
   const [only] = parseHlsMaster(text, MASTER_URL);
@@ -86,6 +113,46 @@ test('parseDashManifest reads dimensions and bandwidth', () => {
 
 test('parseDashManifest returns nothing for content that is not an MPD', () => {
   assert.deepEqual(parseDashManifest('<html><body>404</body></html>', 'https://x/y.mpd'), []);
+});
+
+test('a Representation inherits width and height from its AdaptationSet', () => {
+  const mpd = `<MPD><Period>
+    <AdaptationSet mimeType="video/mp4" width="1920" height="1080">
+      <Representation id="v0" bandwidth="5000000"/>
+    </AdaptationSet></Period></MPD>`;
+
+  const [only] = parseDashManifest(mpd, 'https://cdn.example.com/d/m.mpd');
+
+  assert.equal(only.height, 1080);
+  assert.equal(only.width, 1920);
+});
+
+test('a Representation overrides an inherited dimension', () => {
+  const mpd = `<MPD><Period>
+    <AdaptationSet mimeType="video/mp4" width="1920" height="1080">
+      <Representation id="v0" bandwidth="5000000"/>
+      <Representation id="v1" width="1280" height="720" bandwidth="2500000"/>
+    </AdaptationSet></Period></MPD>`;
+
+  assert.deepEqual(parseDashManifest(mpd, 'https://x/m.mpd').map((v) => v.height), [1080, 720]);
+});
+
+test('maxWidth and maxHeight are used when width and height are absent', () => {
+  const mpd = `<MPD><Period>
+    <AdaptationSet mimeType="video/mp4" maxWidth="1920" maxHeight="1080">
+      <Representation id="v0" bandwidth="5000000"/>
+    </AdaptationSet></Period></MPD>`;
+
+  assert.equal(parseDashManifest(mpd, 'https://x/m.mpd')[0].height, 1080);
+});
+
+test('a DASH variant carries no per-variant URL', () => {
+  // Unlike HLS there is no separate playlist per quality; the download target
+  // is the manifest plus a selector. Duplicating the manifest URL on every row
+  // would read as though each had its own.
+  const variants = parseDashManifest(fixture('manifest.mpd'), 'https://x/m.mpd');
+
+  assert.ok(variants.every((v) => v.url === null));
 });
 
 test('describeVariant leads with the height when there is one', () => {

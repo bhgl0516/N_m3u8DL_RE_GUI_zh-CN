@@ -102,6 +102,7 @@ export function parseHlsMaster(text, baseUrl) {
     for (let j = i + 1; j < lines.length; j++) {
       const nextLine = lines[j].trim();
       if (!nextLine) continue;
+      if (nextLine.startsWith('#EXT-X-STREAM-INF:')) break;
       if (nextLine.startsWith('#')) continue;
       uri = nextLine;
       break;
@@ -166,6 +167,12 @@ export function parseDashManifest(text, baseUrl) {
     const isAudio = mime.includes('audio') || /contentType=["']audio["']/i.test(chunk);
     const kind = isAudio ? 'audio' : 'video';
 
+    // Parse AdaptationSet level dimension fallback (width / maxWidth, height / maxHeight)
+    const adaptWidthMatch = /\b(?:width|maxWidth)=["'](\d+)["']/i.exec(chunk);
+    const adaptHeightMatch = /\b(?:height|maxHeight)=["'](\d+)["']/i.exec(chunk);
+    const adaptWidth = adaptWidthMatch ? Number.parseInt(adaptWidthMatch[1], 10) : null;
+    const adaptHeight = adaptHeightMatch ? Number.parseInt(adaptHeightMatch[1], 10) : null;
+
     // Parse each <Representation ... /> or <Representation ...> inside
     const repRegex = /<Representation\b([^>]*)/gi;
     let repMatch;
@@ -178,8 +185,8 @@ export function parseDashManifest(text, baseUrl) {
       const bwMatch = /\bbandwidth=["'](\d+)["']/i.exec(repAttrs);
       const codecsMatch = /\bcodecs=["']([^"']+)["']/i.exec(repAttrs);
 
-      const width = widthMatch ? Number.parseInt(widthMatch[1], 10) : null;
-      const height = heightMatch ? Number.parseInt(heightMatch[1], 10) : null;
+      const width = widthMatch ? Number.parseInt(widthMatch[1], 10) : adaptWidth;
+      const height = heightMatch ? Number.parseInt(heightMatch[1], 10) : adaptHeight;
       const bandwidth = bwMatch ? Number.parseInt(bwMatch[1], 10) : null;
       const codecs = codecsMatch ? codecsMatch[1] : null;
 
@@ -189,7 +196,7 @@ export function parseDashManifest(text, baseUrl) {
         height: Number.isFinite(height) ? height : null,
         bandwidth: Number.isFinite(bandwidth) ? bandwidth : null,
         codecs,
-        url: baseUrl,
+        url: null,
         label: ''
       };
       variant.label = describeVariant(variant);
