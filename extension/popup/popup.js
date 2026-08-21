@@ -6,6 +6,7 @@ import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll } 
 import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
 import { toCurl, toBatchList } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
+import { rankStreams, groupByOrigin, reconcileSelection, matchesFilter } from '../lib/list-policy.js';
 
 let activeTabId = null;
 let currentView = 'current'; // 'current' | 'all'
@@ -18,8 +19,6 @@ const selectedUrls = new Set();
 const variantsCache = new Map(); // url -> { variants, error, loading }
 const selectedQualityMap = new Map(); // url -> selectVideo directive string
 const expandedQualities = new Set(); // set of urls currently open
-
-const KIND_RANK = { HLS: 0, DASH: 0, MSS: 0, Abyss: 1, Media: 2, Audio: 2 };
 
 function showToast(message) {
   const toast = document.getElementById('toast');
@@ -90,31 +89,15 @@ function splitUrl(rawUrl) {
   }
 }
 
-function getOriginHeader(item) {
-  if (item.referer) {
-    try {
-      return new URL(item.referer).hostname;
-    } catch {
-      return item.referer;
-    }
-  }
-  try {
-    return new URL(item.url).hostname;
-  } catch {
-    return 'Other streams';
-  }
-}
-
 function updateBulkBar(visibleStreams) {
   const bulkBar = document.getElementById('bulk-bar');
   const countLabel = document.getElementById('selected-count');
   const selectAll = document.getElementById('select-all-checkbox');
 
   // Prune URLs that no longer exist
-  const visibleUrlSet = new Set(visibleStreams.map((s) => s.url));
-  for (const u of selectedUrls) {
-    if (!visibleUrlSet.has(u)) selectedUrls.delete(u);
-  }
+  const reconciled = reconcileSelection(selectedUrls, visibleStreams);
+  selectedUrls.clear();
+  for (const u of reconciled) selectedUrls.add(u);
 
   if (selectedUrls.size > 0) {
     bulkBar.hidden = false;
@@ -151,8 +134,7 @@ function paint({ streams, otherCount }) {
   // Filter streams by search query if set
   let displayed = streams;
   if (filterQuery) {
-    const q = filterQuery.toLowerCase();
-    displayed = streams.filter((s) => (s.url && s.url.toLowerCase().includes(q)) || (s.kind && s.kind.toLowerCase().includes(q)));
+    displayed = streams.filter((s) => matchesFilter(s, filterQuery));
   }
 
   updateBulkBar(displayed);
@@ -189,31 +171,30 @@ function paint({ streams, otherCount }) {
   streamList.textContent = ''; // clear without innerHTML
 
   // Rank: manifests first, high confidence first, then newest first
-  const ranked = [...displayed].sort((a, b) =>
-    (KIND_RANK[a.kind] ?? 3) - (KIND_RANK[b.kind] ?? 3) ||
-    (a.confidence === 'low') - (b.confidence === 'low') ||
-    (b.timestamp || 0) - (a.timestamp || 0)
-  );
+  const ranked = rankStreams(displayed);
 
   // Group by page domain if viewing All Recent
   if (currentView === 'all' && !filterQuery) {
-    const groups = new Map();
-    for (const item of ranked) {
-      const origin = getOriginHeader(item);
-      if (!groups.has(origin)) groups.set(origin, []);
-      groups.get(origin).push(item);
-    }
+    const groups = groupByOrigin(ranked);
 
-    for (const [origin, groupItems] of groups) {
+    for (const group of groups) {
       const groupWrapper = document.createElement('div');
       groupWrapper.className = 'page-group';
 
       const groupHeading = document.createElement('div');
       groupHeading.className = 'page-group-header';
-      groupHeading.textContent = `🌐 ${origin} (${groupItems.length})`;
+      let headerText = 'Other streams';
+      if (group.origin) {
+        try {
+          headerText = new URL(group.origin).hostname || group.origin;
+        } catch {
+          headerText = group.origin;
+        }
+      }
+      groupHeading.textContent = `🌐 ${headerText} (${group.items.length})`;
       groupWrapper.appendChild(groupHeading);
 
-      groupItems.forEach((item, index) => {
+      group.items.forEach((item, index) => {
         const card = createStreamCard(item, index, ranked.length, displayed);
         groupWrapper.appendChild(card);
       });
@@ -402,7 +383,8 @@ async function loadQualities(item, panel, button) {
   renderQualitiesPanel(panel, item);
   if (button) button.disabled = true;
 
-  const result = await probeVariants(item);
+  const tabId = item.tabId || activeTabId || null;
+  const result = await probeVariants(item, tabId);
   variantsCache.set(item.url, {
     variants: result.variants,
     error: result.error,
