@@ -262,7 +262,9 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
   card.setAttribute('role', 'option');
   card.setAttribute('aria-selected', selectedUrls.has(item.url) ? 'true' : 'false');
 
-  if (index === 0 && !filterQuery && totalCount > 1) {
+  // Position 0 of the *rendered* set. Filtering is when a user most needs the
+  // ranking, and a lone stream still benefits from confirmation of its kind.
+  if (index === 0) {
     card.classList.add('is-primary');
   }
   if (selectedUrls.has(item.url)) {
@@ -302,10 +304,10 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
   kindSpan.textContent = item.kind === 'Abyss' ? '🎬 Abyss / Hydrax' : item.kind;
   metaLeft.appendChild(kindSpan);
 
-  if (index === 0 && !filterQuery && totalCount > 1) {
+  if (index === 0) {
     const recBadge = document.createElement('span');
     recBadge.className = 'badge-recommended';
-    recBadge.textContent = '⭐ Recommended';
+    recBadge.textContent = filterQuery ? '⭐ Best match' : '⭐ Recommended';
     metaLeft.appendChild(recBadge);
   }
 
@@ -647,9 +649,7 @@ async function init() {
   const selectAll = document.getElementById('select-all-checkbox');
   selectAll.addEventListener('change', async () => {
     const data = await loadStreams();
-    const visible = filterQuery
-      ? data.streams.filter((s) => (s.url && s.url.toLowerCase().includes(filterQuery.toLowerCase())) || (s.kind && s.kind.toLowerCase().includes(filterQuery.toLowerCase())))
-      : data.streams;
+    const visible = data.streams.filter((s) => matchesFilter(s, filterQuery));
 
     if (selectedUrls.size > 0) {
       selectedUrls.clear();

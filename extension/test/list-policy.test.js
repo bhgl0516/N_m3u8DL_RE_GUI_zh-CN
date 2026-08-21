@@ -132,3 +132,31 @@ test('an empty query matches everything', () => {
 test('a query matching neither field does not match', () => {
   assert.ok(!matchesFilter(s('https://cdn/a.m3u8', 'HLS'), 'zzz'));
 });
+
+test('ranking a filtered subset still puts a manifest first', () => {
+  // The rendered set after filtering must be ranked, not merely sliced from
+  // the ranked full set — the top-ranked stream may not survive the filter.
+  const all = [
+    s('https://cdn/master.m3u8', 'HLS'),
+    s('https://cdn/chunk-720.m3u8', 'HLS'),
+    s('https://cdn/chunk-720.mp4', 'Media')
+  ];
+
+  const filtered = all.filter((x) => matchesFilter(x, 'chunk'));
+  const ranked = rankStreams(filtered);
+
+  assert.equal(ranked.length, 2);
+  assert.equal(ranked[0].kind, 'HLS');
+});
+
+test('matchesFilter is the single predicate — trimming behaves the same everywhere', () => {
+  // Guards B3: popup.js filtered in two places, one inline. A query with
+  // surrounding whitespace must not select a different set than it shows.
+  const item = s('https://cdn/master.m3u8', 'HLS');
+
+  assert.equal(matchesFilter(item, '  master  '), matchesFilter(item, 'master'));
+});
+
+test('matchesFilter treats an all-whitespace query as no filter', () => {
+  assert.ok(matchesFilter(s('https://cdn/a.m3u8', 'HLS'), '   '));
+});
