@@ -566,15 +566,35 @@ body {
 
 .toast {
   display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   background-color: #10B981;
   color: #0D0D0F;
   font-weight: 700;
   font-size: var(--text-xs);
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   text-align: center;
   margin-bottom: 6px;
   animation: fadeIn 0.2s ease-in;
+}
+
+.toast-action {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  color: #0D0D0F;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-left: auto;
+  transition: background-color 0.15s ease;
+}
+
+.toast-action:hover {
+  background: rgba(0, 0, 0, 0.35);
 }
 
 @keyframes fadeIn {

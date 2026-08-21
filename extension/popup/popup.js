@@ -2,7 +2,7 @@
  * N-RE Stream Bridge — Popup Logic
  */
 
-import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, dismissStreams } from '../lib/storage.js';
+import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, clearTabView, dismissMany, undismissMany } from '../lib/storage.js';
 import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
 import { toCurl, toBatchList } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
@@ -20,16 +20,48 @@ const variantsCache = new Map(); // url -> { variants, error, loading }
 const selectedQualityMap = new Map(); // url -> selectVideo directive string
 const expandedQualities = new Set(); // set of urls currently open
 
-function showToast(message) {
+function showToast(message, options = {}) {
   const toast = document.getElementById('toast');
+  const toastText = document.getElementById('toast-text') || toast;
+  const toastAction = document.getElementById('toast-action');
   if (!toast) return;
-  toast.textContent = message;
-  toast.style.display = 'block';
 
+  if (toastText !== toast) {
+    toastText.textContent = message;
+  } else {
+    toast.textContent = message;
+  }
+
+  if (toastAction) {
+    if (options.actionLabel && options.onAction) {
+      toastAction.textContent = options.actionLabel;
+      toastAction.setAttribute('aria-label', options.actionLabel);
+      toastAction.hidden = false;
+      toastAction.onclick = (e) => {
+        e.stopPropagation();
+        options.onAction();
+        hideToast();
+      };
+    } else {
+      toastAction.hidden = true;
+      toastAction.onclick = null;
+    }
+  }
+
+  toast.style.display = 'flex';
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
-    toast.style.display = 'none';
-  }, 3500);
+    hideToast();
+  }, options.duration || 3500);
+}
+
+function hideToast() {
+  const toast = document.getElementById('toast');
+  if (toast) toast.style.display = 'none';
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
 }
 
 async function copyWithFeedback(button, text, originalLabel, successMessage) {
@@ -89,7 +121,7 @@ function splitUrl(rawUrl) {
   }
 }
 
-function updateBulkBar(visibleStreams) {
+function updateBulkBar(visibleStreams = []) {
   const bulkBar = document.getElementById('bulk-bar');
   const countLabel = document.getElementById('selected-count');
   const selectAll = document.getElementById('select-all-checkbox');
@@ -99,13 +131,24 @@ function updateBulkBar(visibleStreams) {
   selectedUrls.clear();
   for (const u of reconciled) selectedUrls.add(u);
 
-  if (selectedUrls.size > 0) {
+  const count = selectedUrls.size;
+  const total = visibleStreams.length;
+
+  if (count > 0) {
     bulkBar.hidden = false;
-    countLabel.textContent = `${selectedUrls.size} selected`;
-    selectAll.checked = visibleStreams.length > 0 && selectedUrls.size === visibleStreams.length;
+    countLabel.textContent = `${count} selected`;
   } else {
     bulkBar.hidden = true;
-    selectAll.checked = false;
+    countLabel.textContent = '0 selected';
+  }
+
+  if (selectAll) {
+    selectAll.checked = total > 0 && count === total;
+    selectAll.indeterminate = count > 0 && count < total;
+    selectAll.setAttribute(
+      'aria-checked',
+      count === total && total > 0 ? 'true' : (count > 0 ? 'mixed' : 'false')
+    );
   }
 }
 
@@ -571,17 +614,33 @@ async function init() {
     variantsCache.clear();
     expandedQualities.clear();
 
-    // Dismiss before clearAll: clearAll drops dismissals too, so the reverse
-    // order erases the dismissal it was meant to record.
-    if (activeTabId && streams.length > 0) {
-      await dismissStreams(activeTabId, streams.map((s) => s.url));
+    // clearAll wipes the lists and the variant cache but deliberately leaves
+    // dismissals alone — they are what stops a still-playing page refilling
+    // the list a few milliseconds later.
+    const clearedItems = streams.map((s) => ({
+      url: s.url,
+      tabId: s.tabId || (currentView === 'current' ? activeTabId : null)
+    }));
+
+    if (clearedItems.length > 0) {
+      await dismissMany(clearedItems);
     }
-    await clearAll();
+
+    if (currentView === 'current' && activeTabId) {
+      await clearTabView(activeTabId);
+    } else {
+      await clearAll();
+    }
 
     renderStreams();
-    showToast(streams.length > 0
-      ? `Cleared ${streams.length} stream(s)`
-      : 'Nothing to clear');
+    showToast(clearedItems.length > 0 ? `Cleared ${clearedItems.length} stream(s)` : 'Nothing to clear', {
+      actionLabel: clearedItems.length > 0 ? 'Undo' : null,
+      onAction: async () => {
+        await undismissMany(clearedItems);
+        renderStreams();
+        showToast('Restored detection for cleared streams');
+      }
+    });
   });
 
   // Bulk bar actions
@@ -592,10 +651,10 @@ async function init() {
       ? data.streams.filter((s) => (s.url && s.url.toLowerCase().includes(filterQuery.toLowerCase())) || (s.kind && s.kind.toLowerCase().includes(filterQuery.toLowerCase())))
       : data.streams;
 
-    if (selectAll.checked) {
-      visible.forEach((s) => selectedUrls.add(s.url));
-    } else {
+    if (selectedUrls.size > 0) {
       selectedUrls.clear();
+    } else {
+      visible.forEach((s) => selectedUrls.add(s.url));
     }
     renderStreams();
   });
@@ -612,11 +671,6 @@ async function init() {
       '📋 Copy as list',
       `Copied ${selectedStreams.length} URLs as batch list! Paste in GUI.`
     );
-  });
-
-  document.getElementById('btn-bulk-clear').addEventListener('click', () => {
-    selectedUrls.clear();
-    renderStreams();
   });
 
   // Filter input handler

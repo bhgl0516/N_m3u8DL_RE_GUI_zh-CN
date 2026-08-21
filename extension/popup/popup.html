@@ -32,7 +32,6 @@
       </div>
       <div class="bulk-actions">
         <button id="btn-bulk-copy" class="btn btn-sm">📋 Copy as list</button>
-        <button id="btn-bulk-clear" class="btn btn-secondary btn-sm" aria-label="Deselect all streams">Deselect all</button>
       </div>
     </div>
 
@@ -63,7 +62,10 @@
   </main>
 
   <footer class="footer">
-    <div id="toast" class="toast" role="status" aria-live="polite">Copied as cURL! Switch to GUI & click "Paste from browser"</div>
+    <div id="toast" class="toast" role="status" aria-live="polite">
+      <span id="toast-text">Copied as cURL! Switch to GUI & click "Paste from browser"</span>
+      <button id="toast-action" class="toast-action" hidden></button>
+    </div>
     <div class="helper-hint">💡 Click <strong>"Copy as cURL"</strong> then press <strong>"📋 Paste from browser"</strong> in GUI</div>
   </footer>
 
