@@ -279,6 +279,7 @@ cf_dl_*.bat
 
 test.txt
 /tools
+# Planning and scratch documentation kept local only
 /docs/
 /references
 /graphify-out
