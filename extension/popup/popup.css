@@ -295,7 +295,15 @@ body {
   background-color: #1F2133;
 }
 
-.stream-card:hover {
+.stream-card:not(.is-primary):not(.is-selected):hover {
+  border-color: #7A87FF;
+}
+
+.stream-card.is-primary:hover {
+  border-color: #5865F2 #3F4A85 #3F4A85 #7A87FF;
+}
+
+.stream-card.is-selected:hover {
   border-color: #7A87FF;
 }
 
@@ -394,7 +402,7 @@ body {
 
 .stream-time {
   font-size: var(--text-xs);
-  color: #71718A;
+  color: #9898B0;
   margin-left: auto;
 }
 
@@ -522,7 +530,7 @@ body {
 
 .btn.is-copied {
   background-color: #10B981 !important;
-  color: #FFFFFF;
+  color: #0D0D0F !important;
 }
 
 .btn-secondary {
