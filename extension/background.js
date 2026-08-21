@@ -44,9 +44,30 @@ function updateBadge(tabId, count) {
   chrome.action.setBadgeText({ tabId, text: count > 0 ? String(count) : '' });
 }
 
+/**
+ * The badge is derived from storage, not pushed to.
+ *
+ * The popup mutates storage directly and has no channel to this worker, so a
+ * pushed badge went stale on every clear — the icon kept its old count while
+ * the list was empty. Reading the change event covers add, clear, tab-clear
+ * and navigation with one path.
+ */
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'session') return;
+
+  for (const [key, change] of Object.entries(changes)) {
+    if (!key.startsWith('tab_')) continue;
+
+    const tabId = Number.parseInt(key.slice('tab_'.length), 10);
+    if (!Number.isFinite(tabId)) continue;
+
+    updateBadge(tabId, Array.isArray(change.newValue) ? change.newValue.length : 0);
+  }
+});
+
 async function register(tabId, streamData) {
   try {
-    const count = await addStream(tabId, {
+    await addStream(tabId, {
       url: streamData.url,
       kind: streamData.kind,
       confidence: streamData.confidence || 'high',
@@ -59,9 +80,8 @@ async function register(tabId, streamData) {
       tabId: tabId && tabId > 0 ? tabId : null,
       timestamp: Date.now()
     });
-    updateBadge(tabId, count);
   } catch (err) {
-    console.error('[N_m3u8DL-RE] Error storing stream:', err);
+    console.error('[N-RE Stream Bridge] Error storing stream:', err);
   }
 }
 
@@ -150,14 +170,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ ok: true });
     return true;
   }
-
-  if (message && message.type === 'CLEAR_STREAMS' && message.tabId) {
-    clearTab(message.tabId).then(() => {
-      updateBadge(message.tabId, 0);
-      sendResponse({ ok: true });
-    });
-    return true;
-  }
 });
 
 // Per-tab origin, so a hash or query change during playback is not mistaken
@@ -192,6 +204,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabOrigins.delete(tabId);
   clearTab(tabId);
+  updateBadge(tabId, 0);
 });
 
 // One-shot: 1.0.1 wrote captured cookies to storage.local, which persists on
