@@ -103,7 +103,10 @@ async function fetchDirect(url, timeoutMs) {
  * caching results in session storage (P9).
  * Returns { variants: Variant[], error: string|null }.
  */
-export async function probeVariants(stream, tabId = null) {
+export async function probeVariants(stream, tabId = null, deps = {}) {
+  const fetchPage = deps.fetchFromPage ?? fetchFromPage;
+  const fetchDirect_ = deps.fetchDirect ?? fetchDirect;
+
   if (!stream || !stream.url) {
     return { variants: [], error: 'Invalid stream' };
   }
@@ -121,13 +124,13 @@ export async function probeVariants(stream, tabId = null) {
   let fetchResult = null;
   const targetTabId = tabId || stream.tabId || null;
 
-  if (targetTabId && typeof chrome !== 'undefined' && chrome?.scripting?.executeScript) {
-    fetchResult = await fetchFromPage(targetTabId, stream.url, TIMEOUT_MS);
+  if (targetTabId && (deps.fetchFromPage || (typeof chrome !== 'undefined' && chrome?.scripting?.executeScript))) {
+    fetchResult = await fetchPage(targetTabId, stream.url, TIMEOUT_MS);
   }
 
   // Fall back if tab was closed, inaccessible, or no tabId
   if (!fetchResult || !fetchResult.ok) {
-    const directResult = await fetchDirect(stream.url, TIMEOUT_MS);
+    const directResult = await fetchDirect_(stream.url, TIMEOUT_MS);
     if (directResult.ok) {
       fetchResult = directResult;
     } else {
