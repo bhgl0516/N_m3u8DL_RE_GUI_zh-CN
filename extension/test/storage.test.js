@@ -7,9 +7,12 @@ const {
   addStream,
   getTabStreams,
   getRecentStreams,
+  clearTab,
   clearAll,
   getCachedVariants,
-  setCachedVariants
+  setCachedVariants,
+  dismissStreams,
+  getDismissed
 } = await import('../lib/storage.js');
 
 const TAB = 7;
@@ -187,4 +190,94 @@ test('clearAll removes cached variants as well', async () => {
   await clearAll();
 
   assert.equal(await getCachedVariants(url), null);
+});
+
+test('a dismissed URL is not re-added', async () => {
+  const item = stream('https://cdn.example.com/master.m3u8', 'HLS');
+  await addStream(TAB, item);
+  await dismissStreams(TAB, [item.url]);
+
+  await addStream(TAB, item);
+
+  assert.deepEqual(await getTabStreams(TAB), []);
+});
+
+test('a URL that was never dismissed still appears after a clear', async () => {
+  // The failure mode worse than the bug: Clear must not hide something new.
+  await addStream(TAB, stream('https://cdn.example.com/old.m3u8', 'HLS'));
+  await dismissStreams(TAB, ['https://cdn.example.com/old.m3u8']);
+
+  await addStream(TAB, stream('https://cdn.example.com/new.m3u8', 'HLS'));
+
+  const list = await getTabStreams(TAB);
+  assert.equal(list.length, 1);
+  assert.equal(list[0].url, 'https://cdn.example.com/new.m3u8');
+});
+
+test('dismissal is scoped to its tab', async () => {
+  const url = 'https://cdn.example.com/master.m3u8';
+  await dismissStreams(TAB, [url]);
+
+  await addStream(9, stream(url, 'HLS'));
+
+  assert.equal((await getTabStreams(9)).length, 1);
+});
+
+test('a dismissed URL is also kept out of the recent list', async () => {
+  const item = stream('https://cdn.example.com/master.m3u8', 'HLS');
+  await dismissStreams(TAB, [item.url]);
+
+  await addStream(TAB, item);
+
+  assert.deepEqual(await getRecentStreams(), []);
+});
+
+test('dismissing several URLs at once', async () => {
+  await dismissStreams(TAB, ['https://a/1.m3u8', 'https://a/2.m3u8']);
+
+  await addStream(TAB, stream('https://a/1.m3u8', 'HLS'));
+  await addStream(TAB, stream('https://a/2.m3u8', 'HLS'));
+
+  assert.deepEqual(await getTabStreams(TAB), []);
+});
+
+test('dismissing is additive, not replacing', async () => {
+  await dismissStreams(TAB, ['https://a/1.m3u8']);
+  await dismissStreams(TAB, ['https://a/2.m3u8']);
+
+  assert.equal((await getDismissed(TAB)).size, 2);
+});
+
+test('the dismissed set is bounded', async () => {
+  const many = Array.from({ length: 300 }, (_, i) => `https://a/${i}.m3u8`);
+  await dismissStreams(TAB, many);
+
+  assert.ok((await getDismissed(TAB)).size <= 200);
+});
+
+test('the newest dismissals survive the bound', async () => {
+  // Dropping the oldest is right: an old URL is unlikely to be re-requested,
+  // and if it is, showing it again is a smaller harm than hiding a fresh one.
+  await dismissStreams(TAB, Array.from({ length: 200 }, (_, i) => `https://a/${i}.m3u8`));
+  await dismissStreams(TAB, ['https://a/newest.m3u8']);
+
+  assert.ok((await getDismissed(TAB)).has('https://a/newest.m3u8'));
+});
+
+test('dismissStreams with an empty list is a no-op', async () => {
+  await dismissStreams(TAB, []);
+
+  assert.equal((await getDismissed(TAB)).size, 0);
+});
+
+test('getDismissed returns an empty set for an unknown tab', async () => {
+  assert.equal((await getDismissed(4242)).size, 0);
+});
+
+test('clearTab also drops that tab dismissals', async () => {
+  await dismissStreams(TAB, ['https://a/1.m3u8']);
+
+  await clearTab(TAB);
+
+  assert.equal((await getDismissed(TAB)).size, 0);
 });
