@@ -13,7 +13,7 @@
       <span class="logo-text">N-RE Stream Bridge</span>
     </div>
     <div class="header-actions">
-      <span id="stream-count" class="badge">0</span>
+      <span id="stream-count" class="badge" aria-label="Streams detected">0</span>
       <button id="btn-refresh" class="icon-btn" title="Refresh stream list" aria-label="Refresh stream list">🔄</button>
       <button id="btn-clear" class="icon-btn" title="Clear detected streams" aria-label="Clear detected streams">🗑️</button>
     </div>
@@ -43,23 +43,23 @@
     <div id="empty-state" class="empty-state">
       <div class="empty-icon">📡</div>
       <p class="empty-title">Waiting for video stream...</p>
-      <p class="empty-hint" id="hint-default">
-        1. Play or seek the video on this page.<br>
-        2. Streams (HLS, DASH, MSS, MP4) appear here automatically.<br>
-        3. No luck? Try another server or player on the page.
-      </p>
+      <ol class="empty-steps" id="hint-default">
+        <li>Play or seek the video on this page.</li>
+        <li>Streams (HLS, DASH, MSS, MP4) appear here automatically.</li>
+        <li>No luck? Try another server or player on the page.</li>
+      </ol>
       <div class="empty-hint" id="hint-other-tabs" hidden>
         Nothing on this tab yet — but <strong id="other-tab-count">0</strong> stream(s)
         were found on other tabs.<br>
-        <button id="btn-switch-all" class="btn btn-secondary btn-sm" style="margin-top: 10px;">Switch to All Recent</button>
+        <button id="btn-switch-all" class="btn btn-secondary btn-sm empty-switch-btn">Switch to All Recent</button>
       </div>
     </div>
 
-    <p id="no-matches" class="empty-hint" style="text-align: center; padding: 24px 16px;" hidden>
+    <p id="no-matches" class="empty-hint no-matches-hint" hidden>
       No stream matches “<span id="no-matches-term"></span>”.
     </p>
 
-    <div id="stream-list" class="stream-list" role="feed" aria-label="Detected video streams"></div>
+    <div id="stream-list" class="stream-list" role="listbox" aria-multiselectable="true" aria-label="Detected video streams"></div>
   </main>
 
   <footer class="footer">
