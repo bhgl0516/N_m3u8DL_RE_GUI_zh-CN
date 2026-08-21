@@ -180,9 +180,8 @@ function paint({ streams, otherCount }) {
     for (const group of groups) {
       const groupWrapper = document.createElement('div');
       groupWrapper.className = 'page-group';
+      groupWrapper.setAttribute('role', 'group');
 
-      const groupHeading = document.createElement('div');
-      groupHeading.className = 'page-group-header';
       let headerText = 'Other streams';
       if (group.origin) {
         try {
@@ -191,6 +190,10 @@ function paint({ streams, otherCount }) {
           headerText = group.origin;
         }
       }
+      groupWrapper.setAttribute('aria-label', headerText);
+
+      const groupHeading = document.createElement('div');
+      groupHeading.className = 'page-group-header';
       groupHeading.textContent = `🌐 ${headerText} (${group.items.length})`;
       groupWrapper.appendChild(groupHeading);
 
@@ -213,6 +216,8 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
   const card = document.createElement('div');
   card.className = 'stream-card';
   card.tabIndex = 0; // roving keyboard focus
+  card.setAttribute('role', 'option');
+  card.setAttribute('aria-selected', selectedUrls.has(item.url) ? 'true' : 'false');
 
   if (index === 0 && !filterQuery && totalCount > 1) {
     card.classList.add('is-primary');
@@ -239,9 +244,11 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
     if (checkbox.checked) {
       selectedUrls.add(item.url);
       card.classList.add('is-selected');
+      card.setAttribute('aria-selected', 'true');
     } else {
       selectedUrls.delete(item.url);
       card.classList.remove('is-selected');
+      card.setAttribute('aria-selected', 'false');
     }
     updateBulkBar(allDisplayed);
   });
