@@ -1752,41 +1752,68 @@ namespace N_m3u8DL_RE_GUI
                 if (Button_CheckUpdate != null) Button_CheckUpdate.IsEnabled = false;
                 if (TextBlock_UpdateStatus != null) TextBlock_UpdateStatus.Text = "Checking...";
 
+                var currentVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                if (currentVer == null)
+                {
+                    // No safe guess exists: too low nags about the installed version, too
+                    // high hides every real update. Say nothing rather than mislead.
+                    if (isManual && TextBlock_UpdateStatus != null)
+                        TextBlock_UpdateStatus.Text = "Could not determine this app's version.";
+                    return;
+                }
+
                 var service = new N_m3u8DL_RE_GUI.Core.Services.GitHubUpdateCheckService();
-                var currentVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version ?? new Version(2, 1, 4);
                 var result = await service.CheckForUpdateAsync("naravid19", "N_m3u8DL_RE_GUI", currentVer);
 
-                if (result.HasUpdate)
+                switch (result.Status)
                 {
-                    Button_UpdateBadge.Content = $"🎉 {result.LatestVersion} Available!";
-                    Button_UpdateBadge.Tag = result.ReleaseUrl;
-                    Button_UpdateBadge.Visibility = Visibility.Visible;
-                    if (TextBlock_UpdateStatus != null)
-                        TextBlock_UpdateStatus.Text = $"{result.LatestVersion} available!";
-                }
-                else
-                {
-                    if (TextBlock_UpdateStatus != null)
-                    {
-                        if (isManual)
+                    case N_m3u8DL_RE_GUI.Core.Services.UpdateCheckStatus.UpdateAvailable:
+                        Button_UpdateBadge.Content = $"🎉 {result.LatestVersion} Available!";
+                        Button_UpdateBadge.Tag = result.ReleaseUrl;
+                        Button_UpdateBadge.Visibility = Visibility.Visible;
+                        if (TextBlock_UpdateStatus != null)
+                            TextBlock_UpdateStatus.Text = $"{result.LatestVersion} available!";
+                        break;
+
+                    case N_m3u8DL_RE_GUI.Core.Services.UpdateCheckStatus.UpToDate:
+                        Button_UpdateBadge.Visibility = Visibility.Collapsed;
+                        if (TextBlock_UpdateStatus != null)
                         {
-                            TextBlock_UpdateStatus.Text = "✓ Latest version";
-                            var timer = new System.Windows.Threading.DispatcherTimer
+                            if (isManual)
                             {
-                                Interval = TimeSpan.FromSeconds(3)
-                            };
-                            timer.Tick += (s, e) =>
+                                TextBlock_UpdateStatus.Text = "✓ Latest version";
+                                var timer = new System.Windows.Threading.DispatcherTimer
+                                {
+                                    Interval = TimeSpan.FromSeconds(3)
+                                };
+                                timer.Tick += (s, e) =>
+                                {
+                                    TextBlock_UpdateStatus.Text = "";
+                                    ((System.Windows.Threading.DispatcherTimer)s!).Stop();
+                                };
+                                timer.Start();
+                            }
+                            else
                             {
                                 TextBlock_UpdateStatus.Text = "";
-                                ((System.Windows.Threading.DispatcherTimer)s!).Stop();
-                            };
-                            timer.Start();
+                            }
                         }
-                        else
+                        break;
+
+                    case N_m3u8DL_RE_GUI.Core.Services.UpdateCheckStatus.CheckFailed:
+                    default:
+                        if (TextBlock_UpdateStatus != null)
                         {
-                            TextBlock_UpdateStatus.Text = "";
+                            if (isManual)
+                            {
+                                TextBlock_UpdateStatus.Text = "Could not check for updates — check your connection.";
+                            }
+                            else
+                            {
+                                TextBlock_UpdateStatus.Text = "";
+                            }
                         }
-                    }
+                        break;
                 }
             }
             finally
