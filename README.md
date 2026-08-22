@@ -67,14 +67,15 @@ Download the latest release (`N_m3u8DL_RE_GUI_v2.1.5.zip`) from our [GitHub Rele
 
 ### 2. Extract
 
-Extract the `.zip` file anywhere on your computer. Inside the folder, you will find exactly **4 core files** that power everything:
+Extract the `.zip` file anywhere on your computer. Inside the folder, you will find 4 core files plus the optional companion browser extension:
 
 ```text
 N_m3u8DL_RE_GUI_v2.1.5/
 ├── N_m3u8DL_RE_GUI.exe    <-- The main application (Double click this!)
 ├── N_m3u8DL-RE.exe        <-- The core download engine
 ├── ffmpeg.exe             <-- The video/audio muxing engine
-└── m3u8_cf_bypass.py      <-- The Cloudflare TLS bypass script
+├── m3u8_cf_bypass.py      <-- The Cloudflare TLS bypass script
+└── extension/             <-- Optional browser companion (see below)
 ```
 
 ### 3. Run
@@ -190,6 +191,18 @@ If a website is blocking you with Cloudflare, open the **Network tab (🌐)** an
 - **Auto Subtitle Fix** - Automatically fix subtitle synchronization issues.
 - **Save Pattern** - Custom naming pattern for downloaded files.
 - **Log Level** - Control output verbosity (OFF/ERROR/WARN/INFO/DEBUG).
+
+### Building a Release
+
+To publish a self-contained, single-file release package:
+
+```bash
+dotnet publish N_m3u8DL_RE_GUI\N_m3u8DL_RE_GUI.csproj -c Release -r win-x64 --self-contained true \
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+  -p:EnableCompressionInSingleFile=true
+```
+
+A complete release archive must contain: `N_m3u8DL_RE_GUI.exe`, `N_m3u8DL-RE.exe`, `ffmpeg.exe`, `m3u8_cf_bypass.py`, and the `extension/` folder. The release packaging derives the version directly from the compiled binary's assembly metadata rather than hardcoded literals to prevent version drift across release artifacts.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

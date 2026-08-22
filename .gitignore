@@ -272,6 +272,7 @@ project_requirements.txt
 # Local publish artifacts
 /Publish/
 publish.bat
+publish-exclude.txt
 
 # Temporary Cloudflare bypass segments and temp scripts
 /cf_segments/
