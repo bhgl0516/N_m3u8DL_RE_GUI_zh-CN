@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toCurl, toBatchList } from '../lib/curl.js';
+import { toCurl, toBatchList, findRefererMismatch } from '../lib/curl.js';
 
 const base = {
   url: 'https://cdn.example.com/hls/master.m3u8',
@@ -137,4 +137,73 @@ test('toBatchList warns when entries disagree on Referer', () => {
 
 test('toBatchList returns empty for an empty selection', () => {
   assert.equal(toBatchList([]), '');
+});
+
+// --- Referer mismatch detection (Task 2) ---
+
+test('no mismatch when every stream shares a referer', () => {
+  const result = findRefererMismatch([
+    { url: 'https://a/1.m3u8', referer: 'https://site.example.com/x' },
+    { url: 'https://a/2.m3u8', referer: 'https://site.example.com/y' }
+  ]);
+
+  assert.equal(result.mismatched, false);
+  assert.equal(result.offCount, 0);
+});
+
+test('compares origins, not full referer URLs', () => {
+  // Two episodes on one site have different paths and the same origin.
+  const result = findRefererMismatch([
+    { url: 'https://a/1.m3u8', referer: 'https://site.example.com/ep/1' },
+    { url: 'https://a/2.m3u8', referer: 'https://site.example.com/ep/2' }
+  ]);
+
+  assert.equal(result.mismatched, false);
+});
+
+test('counts how many streams fall outside the primary origin', () => {
+  const result = findRefererMismatch([
+    { url: 'https://a/1.m3u8', referer: 'https://a.example.com/' },
+    { url: 'https://b/2.m3u8', referer: 'https://b.example.com/' },
+    { url: 'https://c/3.m3u8', referer: 'https://c.example.com/' }
+  ]);
+
+  assert.equal(result.mismatched, true);
+  assert.equal(result.primaryOrigin, 'https://a.example.com');
+  assert.equal(result.offCount, 2);
+});
+
+test('streams with no referer are not counted as mismatched', () => {
+  // Nothing to conflict with; they simply carry no header.
+  const result = findRefererMismatch([
+    { url: 'https://a/1.m3u8', referer: 'https://a.example.com/' },
+    { url: 'https://a/2.m3u8', referer: null }
+  ]);
+
+  assert.equal(result.mismatched, false);
+});
+
+test('an unparseable referer does not throw', () => {
+  const result = findRefererMismatch([
+    { url: 'https://a/1.m3u8', referer: 'not a url' },
+    { url: 'https://a/2.m3u8', referer: 'https://a.example.com/' }
+  ]);
+
+  assert.ok(typeof result.mismatched === 'boolean');
+});
+
+test('an empty selection reports no mismatch', () => {
+  assert.equal(findRefererMismatch([]).mismatched, false);
+});
+
+test('toBatchList and the UI check agree', () => {
+  // One rule, two consumers. The payload note existed while the interface
+  // showed a green success toast for a batch the code knew would fail.
+  const streams = [
+    { url: 'https://a/1.m3u8', referer: 'https://a.example.com/' },
+    { url: 'https://b/2.m3u8', referer: 'https://b.example.com/' }
+  ];
+
+  assert.equal(findRefererMismatch(streams).mismatched, true);
+  assert.ok(toBatchList(streams).includes('# note:'));
 });

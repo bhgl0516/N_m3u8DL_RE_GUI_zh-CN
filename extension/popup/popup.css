@@ -146,6 +146,7 @@ body {
 .bulk-bar {
   flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   background-color: #1B1E2E;
@@ -167,6 +168,22 @@ body {
 .bulk-actions {
   display: flex;
   gap: 6px;
+}
+
+.bulk-warning {
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 8px;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: #FCD34D;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.bulk-warning strong {
+  color: #FDE68A;
 }
 
 .filter-bar {

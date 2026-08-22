@@ -22,6 +22,47 @@ export function toCurl(stream, options = {}) {
   return cmd;
 }
 
+function getOrigin(referer) {
+  if (!referer || typeof referer !== 'string') return null;
+  try {
+    const u = new URL(referer);
+    return u.origin;
+  } catch {
+    return referer.trim();
+  }
+}
+
+/**
+ * Checks whether the streams in a selection originate from differing Referer origins.
+ * Returns mismatch state, the primary origin (first non-empty referer origin), and offCount.
+ */
+export function findRefererMismatch(streams) {
+  if (!streams || !Array.isArray(streams) || streams.length === 0) {
+    return { mismatched: false, primaryOrigin: null, offCount: 0 };
+  }
+
+  let primaryOrigin = null;
+  let offCount = 0;
+
+  for (const s of streams) {
+    if (!s || !s.referer) continue;
+    const origin = getOrigin(s.referer);
+    if (!origin) continue;
+
+    if (!primaryOrigin) {
+      primaryOrigin = origin;
+    } else if (origin !== primaryOrigin) {
+      offCount++;
+    }
+  }
+
+  return {
+    mismatched: offCount > 0,
+    primaryOrigin,
+    offCount
+  };
+}
+
 /**
  * Emits a list of URLs formatted for N_m3u8DL-RE GUI's batch downloader.
  */
@@ -30,9 +71,9 @@ export function toBatchList(streams) {
 
   const lines = [];
 
-  // Check for differing Referers
-  const referers = new Set(streams.map((s) => s && s.referer).filter(Boolean));
-  if (referers.size > 1) {
+  // Check for differing Referer origins
+  const mismatch = findRefererMismatch(streams);
+  if (mismatch.mismatched) {
     lines.push('# note: Selected streams originate from different Referers; using first');
   }
 

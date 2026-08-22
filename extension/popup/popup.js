@@ -5,7 +5,7 @@
 import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, clearTabView, dismissMany, undismissMany } from '../lib/storage.js';
 import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
 import { KIND_TITLES } from '../lib/classify.js';
-import { toCurl, toBatchList } from '../lib/curl.js';
+import { toCurl, toBatchList, findRefererMismatch } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
 import { rankStreams, groupByOrigin, reconcileSelection, matchesFilter } from '../lib/list-policy.js';
 
@@ -126,6 +126,7 @@ function updateBulkBar(visibleStreams = []) {
   const bulkBar = document.getElementById('bulk-bar');
   const countLabel = document.getElementById('selected-count');
   const selectAll = document.getElementById('select-all-checkbox');
+  const bulkWarning = document.getElementById('bulk-warning');
 
   // Prune URLs that no longer exist
   const reconciled = reconcileSelection(selectedUrls, visibleStreams);
@@ -138,9 +139,25 @@ function updateBulkBar(visibleStreams = []) {
   if (count > 0) {
     bulkBar.hidden = false;
     countLabel.textContent = `${count} selected`;
+
+    const selectedStreams = visibleStreams.filter((s) => selectedUrls.has(s.url));
+    const mismatch = findRefererMismatch(selectedStreams);
+
+    if (mismatch.mismatched && bulkWarning) {
+      bulkWarning.hidden = false;
+      const countPart = `${mismatch.offCount} of ${selectedStreams.length} selected`;
+      bulkWarning.innerHTML = `<strong>${countPart} are from another site.</strong> Their headers will not apply, and those downloads will likely fail. Copy one site at a time.`;
+    } else if (bulkWarning) {
+      bulkWarning.hidden = true;
+      bulkWarning.textContent = '';
+    }
   } else {
     bulkBar.hidden = true;
     countLabel.textContent = '0 selected';
+    if (bulkWarning) {
+      bulkWarning.hidden = true;
+      bulkWarning.textContent = '';
+    }
   }
 
   if (selectAll) {
