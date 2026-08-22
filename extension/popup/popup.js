@@ -422,6 +422,11 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
 
   // Card keyboard shortcuts
   card.addEventListener('keydown', async (e) => {
+    // These shortcuts belong to the card itself. Without this the events bubble
+    // from whichever button holds focus, so Enter on "URL only" copies the cURL
+    // command and Space on any button toggles selection instead of activating it.
+    if (e.target !== card) return;
+
     if (e.key === ' ') {
       e.preventDefault();
       checkbox.checked = !checkbox.checked;
