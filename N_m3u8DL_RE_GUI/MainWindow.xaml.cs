@@ -24,6 +24,7 @@ using Anim = System.Windows.Media.Animation;
 using N_m3u8DL_RE_GUI.Core;
 using N_m3u8DL_RE_GUI.Core.Abyss;
 using N_m3u8DL_RE_GUI.Core.Capture;
+using N_m3u8DL_RE_GUI.Core.Resume;
 using Services = N_m3u8DL_RE_GUI.Services;
 
 namespace N_m3u8DL_RE_GUI
@@ -185,13 +186,19 @@ namespace N_m3u8DL_RE_GUI
 
         string BuildArgsRE(string? inputOverride = null)
         {
+            var saveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text);
+            var saveName = TextBox_Title.Text;
+            var tmpDir = string.IsNullOrWhiteSpace(TextBox_TmpDir?.Text)
+                ? ResumePaths.DeriveTmpDir(saveDir, saveName)
+                : TextBox_TmpDir.Text.Trim();
+
             var options = new DownloadOptions
             {
                 // Basic Settings
                 Input = string.IsNullOrWhiteSpace(inputOverride) ? TextBox_URL.Text : inputOverride,
-                SaveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text),
-                TmpDir = TextBox_TmpDir?.Text?.Trim(),
-                SaveName = TextBox_Title.Text,
+                SaveDir = saveDir,
+                TmpDir = tmpDir,
+                SaveName = saveName,
                 Headers = TextBox_Headers.Text,
                 BaseUrl = TextBox_Baseurl.Text,
                 MuxImport = TextBox_MuxJson.Text?.Trim(),
@@ -297,6 +304,12 @@ namespace N_m3u8DL_RE_GUI
         /// </summary>
         private DownloadOptions BuildDownloadOptions()
         {
+            var saveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text);
+            var saveName = TextBox_Title.Text;
+            var tmpDir = string.IsNullOrWhiteSpace(TextBox_TmpDir?.Text)
+                ? ResumePaths.DeriveTmpDir(saveDir, saveName)
+                : TextBox_TmpDir.Text.Trim();
+
             return new DownloadOptions
             {
                 // EXE path — lets DownloadService use the GUI-configured binary
@@ -304,9 +317,9 @@ namespace N_m3u8DL_RE_GUI
 
                 // Basic Settings
                 Input = TextBox_URL.Text,
-                SaveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text),
-                TmpDir = TextBox_TmpDir?.Text?.Trim(),
-                SaveName = TextBox_Title.Text,
+                SaveDir = saveDir,
+                TmpDir = tmpDir,
+                SaveName = saveName,
                 Headers = TextBox_Headers.Text,
                 BaseUrl = TextBox_Baseurl.Text,
                 MuxImport = TextBox_MuxJson.Text?.Trim(),
@@ -1090,6 +1103,12 @@ namespace N_m3u8DL_RE_GUI
                         ResetRunState();
                         SetStatus("Downloading…");
 
+                        Services.ResumeJobStore.Default.Begin(
+                            options.Input,
+                            options.SaveName ?? string.Empty,
+                            options.SaveDir ?? string.Empty,
+                            options.TmpDir ?? string.Empty);
+
                         var progress = new Progress<int>(p => ProgressBar_Download.Value = p);
                         var log = new Action<string>(line => Dispatcher.InvokeAsync(() => AppendLog(line)));
 
@@ -1097,6 +1116,7 @@ namespace N_m3u8DL_RE_GUI
 
                         if (succeeded)
                         {
+                            Services.ResumeJobStore.Default.Complete();
                             ProgressBar_Download.Value = 100;
                             SetStatus($"Saved to {_lastOutputDirectory}");
                             Button_OpenFolder.Visibility = Visibility.Visible;
