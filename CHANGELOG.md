@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Resume Interrupted Downloads (`N_m3u8DL_RE_GUI.Core.Resume`)**:
+  - **Deterministic Temp Directory (`ResumePaths`)**: Derives `<save folder>/.nre-tmp/<sanitised saveName>` automatically when `--tmp-dir` is empty, ensuring N_m3u8DL-RE reuses downloaded segments across sessions. Includes DOS reserved device name protection (`CON`, `PRN`, `AUX`, `NUL`, `COM1..9`, `LPT1..9`) and stable prefix hash deduplication for long filenames.
+  - **Active Job Tracking (`ResumeJobStore`)**: Atomically writes `%LOCALAPPDATA%\N_m3u8DL_RE_GUI\active-job.json` on download start and deletes upon successful completion. Interrupted or stopped downloads leave the record intact so existing segments are recoverable.
+  - **Credential Safety**: The job record stores only the source hostname (`SourceHost`), never full stream URLs or access tokens, ensuring signed authentication tokens and cookies are never stored in plaintext.
+  - **Startup Resume Banner (`Border_ResumeBanner`)**: On application launch, checks for incomplete downloads with segments on disk. Displays an amber banner naming the unfinished file, saved byte size, time elapsed, and source domain with 1-click **Resume** and **Discard** actions.
+  - **Fresh Link Re-attachment Workflow**: Restores save name, save folder, and temp directory into GUI fields while prompting the user to paste a fresh link (avoiding expired token 403 errors), seamlessly continuing the download from existing segments.
+  - **Safe Discard**: Confirms deletion naming the exact byte size and cleans up both the temp segment directory and active job record.
+  - **Unit Test Coverage**: Added 29 unit tests across `ResumePathsTests`, `ResumeJobStoreTests`, and `XamlAccessibilityTests`.
+
+### Changed
+
+- **Temp Directory Default Location**: When `TextBox_TmpDir` is left empty, segments now land deterministically in `<save folder>/.nre-tmp/<saveName>` instead of N_m3u8DL-RE's default arbitrary location.
+- **Batch Download Scope**: Batch script runs are single-process multiple downloads and are excluded from single-job resume tracking in this version.
+
+### Notes & Limitations
+
+- **Batch runs are not resumable**: A single job record cannot describe a multi-item run; batch queue resume remains deferred.
+- **Abyss module scope**: The Abyss module is not covered by this series of audits, and is excluded from every test-count figure quoted in them.
+
+---
+
 ## [2.1.5] - 2026-08-20
 
 ### Added
