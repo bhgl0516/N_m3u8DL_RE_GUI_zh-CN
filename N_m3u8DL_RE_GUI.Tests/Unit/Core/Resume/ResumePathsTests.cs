@@ -104,4 +104,105 @@ public class ResumePathsTests
         // rather than inventing a location the user did not ask for.
         Assert.Equal(string.Empty, ResumePaths.DeriveTmpDir(saveDir!, "Episode 4"));
     }
+
+    [Fact]
+    public void ResolveTmpDir_UsesTheResumedDirectoryWhileTheNameStillMatches()
+    {
+        // Retry after a failed resume must keep working.
+        var resolved = ResumePaths.ResolveTmpDir(
+            userOverride: null,
+            resumeJobDir: @"D:\Videos\.nre-tmp\Episode 4",
+            resumeJobSaveName: "Episode 4",
+            saveDir: @"D:\Videos",
+            saveName: "Episode 4");
+
+        Assert.Equal(@"D:\Videos\.nre-tmp\Episode 4", resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_IgnoresTheResumedDirectoryOnceTheNameChanges()
+    {
+        // G1: after abandoning a failed resume, the next video must not inherit
+        // the previous job's folder — del-after-done would destroy its partial.
+        var resolved = ResumePaths.ResolveTmpDir(
+            userOverride: null,
+            resumeJobDir: @"D:\Videos\.nre-tmp\Episode 4",
+            resumeJobSaveName: "Episode 4",
+            saveDir: @"D:\Videos",
+            saveName: "Episode 9");
+
+        Assert.Equal(ResumePaths.DeriveTmpDir(@"D:\Videos", "Episode 9"), resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_NameComparisonIgnoresCaseAndSurroundingSpace()
+    {
+        // The title box is free text; "episode 4 " is the same job.
+        var resolved = ResumePaths.ResolveTmpDir(
+            null, @"D:\Videos\.nre-tmp\Episode 4", "Episode 4", @"D:\Videos", " episode 4 ");
+
+        Assert.Equal(@"D:\Videos\.nre-tmp\Episode 4", resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_StillPrefersTheUserOverrideRegardlessOfTheJob()
+    {
+        var resolved = ResumePaths.ResolveTmpDir(
+            @"E:\scratch", @"D:\Videos\.nre-tmp\Episode 4", "Episode 4", @"D:\Videos", "Episode 4");
+
+        Assert.Equal(@"E:\scratch", resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_WithNoActiveJobDerivesAsBefore()
+    {
+        var resolved = ResumePaths.ResolveTmpDir(null, null, null, @"D:\Videos", "Episode 9");
+
+        Assert.Equal(ResumePaths.DeriveTmpDir(@"D:\Videos", "Episode 9"), resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_WithAJobDirButNoJobNameDoesNotApplyIt()
+    {
+        // A record too old or too damaged to name its job cannot claim a folder.
+        var resolved = ResumePaths.ResolveTmpDir(
+            null, @"D:\Videos\.nre-tmp\Episode 4", null, @"D:\Videos", "Episode 9");
+
+        Assert.Equal(ResumePaths.DeriveTmpDir(@"D:\Videos", "Episode 9"), resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_AnEmptyCurrentNameDoesNotMatchANamedJob()
+    {
+        var resolved = ResumePaths.ResolveTmpDir(
+            null, @"D:\Videos\.nre-tmp\Episode 4", "Episode 4", @"D:\Videos", "");
+
+        Assert.NotEqual(@"D:\Videos\.nre-tmp\Episode 4", resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_TreatsWhitespaceAsUnset()
+    {
+        var resolved = ResumePaths.ResolveTmpDir("   ", "  ", "  ", @"D:\Videos", "Episode 5");
+
+        Assert.Equal(ResumePaths.DeriveTmpDir(@"D:\Videos", "Episode 5"), resolved);
+    }
+
+    [Fact]
+    public void ResolveTmpDir_TrimsTheUserValue()
+    {
+        Assert.Equal(@"E:\scratch",
+            ResumePaths.ResolveTmpDir(@"  E:\scratch  ", null, null, @"D:\Videos", "Episode 5"));
+    }
+
+    [Fact]
+    public void ResolveTmpDir_OnceTheResumedJobIsClearedItDerivesAgain()
+    {
+        // This is the leak: after the resumed run ends, the next download must
+        // derive its own directory, not inherit the previous video's.
+        var duringResume = ResumePaths.ResolveTmpDir(null, @"D:\Videos\.nre-tmp\Episode 4", "Episode 4", @"D:\Videos", "Episode 4");
+        var afterResume  = ResumePaths.ResolveTmpDir(null, null, null, @"D:\Videos", "Episode 5");
+
+        Assert.NotEqual(duringResume, afterResume);
+    }
 }

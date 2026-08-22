@@ -425,6 +425,46 @@
                               Checked="SetTopMost" Unchecked="SetTopMost"/>
                 </Grid>
 
+                <!-- Resume Interrupted Download Banner -->
+                <Border x:Name="Border_ResumeBanner" Visibility="Collapsed"
+                        Background="#2A2113" BorderBrush="{StaticResource CfAmberBrush}"
+                        BorderThickness="1" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="TextBlock_ResumeTitle" FontWeight="SemiBold" FontSize="12"
+                                       Foreground="{StaticResource CfAmberBrush}"
+                                       AutomationProperties.Name="Interrupted Download Title"
+                                       Text="⏸  Unfinished download"/>
+                            <TextBlock x:Name="TextBlock_ResumeDetail" FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"
+                                       AutomationProperties.Name="Interrupted Download Details"
+                                       Text="Partial download found on disk."/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                            <Button x:Name="Button_ResumeJob" Content="Resume"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Background="#3D3017" Foreground="{StaticResource CfAmberBrush}"
+                                    BorderBrush="{StaticResource CfAmberBrush}"
+                                    Padding="10,4" Margin="0,0,6,0"
+                                    Click="Button_ResumeJob_Click"
+                                    AutomationProperties.Name="Resume interrupted download"
+                                    ToolTip="Restore download settings and prepare to attach a fresh link"/>
+                            <Button x:Name="Button_DiscardJob" Content="Discard"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Background="Transparent" Foreground="#EC7063"
+                                    BorderBrush="#7A2D27"
+                                    Padding="10,4"
+                                    Click="Button_DiscardJob_Click"
+                                    AutomationProperties.Name="Discard interrupted download"
+                                    ToolTip="Delete partial files from disk and discard resume data"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <!-- URL Hero Row -->
                 <Grid Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>

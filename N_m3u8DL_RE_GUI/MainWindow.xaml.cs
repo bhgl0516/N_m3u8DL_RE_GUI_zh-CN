@@ -68,6 +68,7 @@ namespace N_m3u8DL_RE_GUI
         // the field only if it is still the owner. Sharing a single field across the
         // async void handlers previously let one flow dispose another's live token.
         private System.Threading.CancellationTokenSource? _activeOperationCts;
+        private ResumeJob? _activeResumeJob;
         // Captured from the XAML so the batch flow can restore the real label (icon and
         // access key included) instead of hard-coding a second, drifting copy of it.
         private object? _downloadButtonLabel;
@@ -188,9 +189,12 @@ namespace N_m3u8DL_RE_GUI
         {
             var saveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text);
             var saveName = TextBox_Title.Text;
-            var tmpDir = string.IsNullOrWhiteSpace(TextBox_TmpDir?.Text)
-                ? ResumePaths.DeriveTmpDir(saveDir, saveName)
-                : TextBox_TmpDir.Text.Trim();
+            var tmpDir = ResumePaths.ResolveTmpDir(
+                TextBox_TmpDir?.Text,
+                _activeResumeJob?.TmpDir,
+                _activeResumeJob?.SaveName,
+                saveDir,
+                saveName);
 
             var options = new DownloadOptions
             {
@@ -306,9 +310,12 @@ namespace N_m3u8DL_RE_GUI
         {
             var saveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text);
             var saveName = TextBox_Title.Text;
-            var tmpDir = string.IsNullOrWhiteSpace(TextBox_TmpDir?.Text)
-                ? ResumePaths.DeriveTmpDir(saveDir, saveName)
-                : TextBox_TmpDir.Text.Trim();
+            var tmpDir = ResumePaths.ResolveTmpDir(
+                TextBox_TmpDir?.Text,
+                _activeResumeJob?.TmpDir,
+                _activeResumeJob?.SaveName,
+                saveDir,
+                saveName);
 
             return new DownloadOptions
             {
@@ -743,6 +750,111 @@ namespace N_m3u8DL_RE_GUI
                 {
                     _ = CheckGuiUpdateAsync(isManual: false);
                 }
+
+                CheckForResumableJob();
+            }
+        }
+
+        private void CheckForResumableJob()
+        {
+            try
+            {
+                var job = Services.ResumeJobStore.Default.TryFindResumable();
+                if (job != null && job.ExistingBytes > 0)
+                {
+                    _activeResumeJob = job;
+                    var title = string.IsNullOrWhiteSpace(job.SaveName) ? "Unfinished download" : $"Unfinished download — \"{job.SaveName}\"";
+                    TextBlock_ResumeTitle.Text = $"⏸  {title}";
+
+                    var size = FormatByteSize(job.ExistingBytes);
+                    var timeAgo = FormatTimeAgo(job.StartedAt);
+                    var host = string.IsNullOrWhiteSpace(job.SourceHost) ? string.Empty : $" · from {job.SourceHost}";
+                    TextBlock_ResumeDetail.Text = $"{size} already saved · stopped {timeAgo}{host}";
+
+                    Border_ResumeBanner.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    _activeResumeJob = null;
+                    Border_ResumeBanner.Visibility = Visibility.Collapsed;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MainWindow] CheckForResumableJob error: {ex.Message}");
+                _activeResumeJob = null;
+                Border_ResumeBanner.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private static string FormatByteSize(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            if (bytes < 1024L * 1024L * 1024L) return $"{bytes / (1024.0 * 1024.0):F0} MB";
+            return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+        }
+
+        private static string FormatTimeAgo(DateTimeOffset startedAt)
+        {
+            var elapsed = DateTimeOffset.UtcNow - startedAt;
+            if (elapsed.TotalMinutes < 1) return "just now";
+            if (elapsed.TotalMinutes < 60)
+            {
+                var m = Math.Max(1, (int)elapsed.TotalMinutes);
+                return $"{m} minute{(m == 1 ? "" : "s")} ago";
+            }
+            if (elapsed.TotalHours < 24)
+            {
+                var h = (int)elapsed.TotalHours;
+                return $"{h} hour{(h == 1 ? "" : "s")} ago";
+            }
+            var d = (int)elapsed.TotalDays;
+            return $"{d} day{(d == 1 ? "" : "s")} ago";
+        }
+
+        private void Button_ResumeJob_Click(object sender, RoutedEventArgs e)
+        {
+            if (_activeResumeJob != null)
+            {
+                if (!string.IsNullOrWhiteSpace(_activeResumeJob.SaveName))
+                    TextBox_Title.Text = _activeResumeJob.SaveName;
+                if (!string.IsNullOrWhiteSpace(_activeResumeJob.SaveDir))
+                    TextBox_WorkDir.Text = _activeResumeJob.SaveDir;
+
+                TextBox_URL.Text = string.Empty;
+                TextBox_URL.Focus();
+
+                Border_ResumeBanner.Visibility = Visibility.Collapsed;
+                SetStatus("Paste a fresh link for this video. The original link has expired — that is normal, and everything already downloaded will be kept.");
+            }
+        }
+
+        private void Button_DiscardJob_Click(object sender, RoutedEventArgs e)
+        {
+            if (_activeResumeJob != null)
+            {
+                var size = FormatByteSize(_activeResumeJob.ExistingBytes);
+                var targetName = string.IsNullOrWhiteSpace(_activeResumeJob.SaveName) ? "this download" : $"\"{_activeResumeJob.SaveName}\"";
+                var message = $"Delete {size} of partial download for {targetName}? This cannot be undone.";
+
+                var result = MessageBox.Show(message, "Discard Interrupted Download", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.Yes)
+                {
+                    var success = Services.ResumeJobStore.Default.Discard();
+                    if (success)
+                    {
+                        Border_ResumeBanner.Visibility = Visibility.Collapsed;
+                        _activeResumeJob = null;
+                        SetStatus("Partial download discarded.");
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Could not delete partial files. A file may still be in use by another process.",
+                            "Discard Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
             }
         }
 
@@ -1117,6 +1229,7 @@ namespace N_m3u8DL_RE_GUI
                         if (succeeded)
                         {
                             Services.ResumeJobStore.Default.Complete();
+                            _activeResumeJob = null;
                             ProgressBar_Download.Value = 100;
                             SetStatus($"Saved to {_lastOutputDirectory}");
                             Button_OpenFolder.Visibility = Visibility.Visible;

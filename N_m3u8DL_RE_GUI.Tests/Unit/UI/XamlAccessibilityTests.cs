@@ -204,5 +204,17 @@ public class XamlAccessibilityTests
         Assert.Contains("x:Name=\"Button_PasteCurl\"", xaml);
         Assert.Contains("Click=\"Button_PasteCurl_Click\"", xaml);
     }
+
+    [Fact]
+    public void ResumeBanner_ShouldHaveAccessibleButtonsAndWiredHandlers()
+    {
+        var xaml = XamlText();
+
+        Assert.Contains("x:Name=\"Border_ResumeBanner\"", xaml);
+        Assert.Contains("x:Name=\"Button_ResumeJob\"", xaml);
+        Assert.Contains("Click=\"Button_ResumeJob_Click\"", xaml);
+        Assert.Contains("x:Name=\"Button_DiscardJob\"", xaml);
+        Assert.Contains("Click=\"Button_DiscardJob_Click\"", xaml);
+    }
 }
 

@@ -19,6 +19,40 @@ public static class ResumePaths
     };
 
     /// <summary>
+    /// Resolves the temp directory to use for a download according to precedence:
+    /// 1. User manual override (userOverride) if non-empty
+    /// 2. Active resumed job directory (resumeJobDir) if non-empty AND resumeJobSaveName matches saveName
+    /// 3. Deterministically derived directory from saveDir and saveName
+    /// </summary>
+    public static string ResolveTmpDir(
+        string? userOverride,
+        string? resumeJobDir,
+        string? resumeJobSaveName,
+        string? saveDir,
+        string? saveName)
+    {
+        if (!string.IsNullOrWhiteSpace(userOverride))
+        {
+            return userOverride.Trim();
+        }
+
+        // The save name is the key the whole feature is built on: it derives the
+        // directory, names the record, and labels the banner. A resumed job's
+        // folder therefore applies only while the name still points at that job.
+        // Without this, abandoning a failed resume leaves the old folder steering
+        // the next download, and del-after-done then destroys the old partial.
+        if (!string.IsNullOrWhiteSpace(resumeJobDir) &&
+            !string.IsNullOrWhiteSpace(resumeJobSaveName) &&
+            !string.IsNullOrWhiteSpace(saveName) &&
+            string.Equals(resumeJobSaveName.Trim(), saveName.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return resumeJobDir.Trim();
+        }
+
+        return DeriveTmpDir(saveDir, saveName);
+    }
+
+    /// <summary>
     /// Derives a deterministic, predictable temporary directory under the save directory
     /// based on the save name. Returns empty string if saveDir is not specified.
     /// </summary>

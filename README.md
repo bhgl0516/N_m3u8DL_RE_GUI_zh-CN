@@ -45,6 +45,7 @@
 ### Main Benefits:
 
 - 🚀 **No command-line memorization** - Common options are available through simple UI controls.
+- ⏯️ **Resume Interrupted Downloads** - Automatically detects stopped or crashed downloads with existing segments on disk. Seamlessly attach a fresh stream link (since signed URLs expire quickly) and resume without losing previously downloaded chunks.
 - 🎬 **Native Abyss & Hydrax Support** - Direct AES-CTR chunk decryption and assembly for `abysscdn.com`, `playhydrax.com`, `zplayer.io`, and `short.ink` without external tools.
 - 📦 **Batch processing** - Download multiple streams from text files or folders with one click.
 - 🔒 **Privacy First** - Your settings and headers are automatically saved between sessions and heavily encrypted using Windows DPAPI.
@@ -142,6 +143,7 @@ If a website is blocking you with Cloudflare, open the **Network tab (🌐)** an
 
 ### Core Features
 - **Universal Stream Capture** - Paste browser cURL commands directly, drag-and-drop `.har` captures with automated stream ranking and picking, or use the **N-RE Stream Bridge** browser extension.
+- **Resume Interrupted Downloads** - Automatically derives deterministic temp directories (`<saveDir>/.nre-tmp/<saveName>`) and persists active job metadata. On startup, detects unfinished downloads with saved segments, offers a 1-click resume workflow with a fresh stream link, or clean discards.
 - **Native Abyss / Hydrax Downloader** - Built-in zero-dependency C# crypto engine that decrypts and reassembles fragmented chunks from `abysscdn.com`, `playhydrax.com`, `zplayer.io`, and `short.ink`.
 - **3-Zone Modern UX/UI Architecture** - Clean layout with a top URL hero bar, a 6-Tab sidebar (`📦 Download`, `🌐 Network`, `🔒 Security`, `🎬 Media`, `📡 Live`, `⚙️ Advanced`), and a fixed command preview bar at the bottom.
 - **GUI Auto-Update Engine** - Zero rate-limit HTTP update checker. If a new version is released, a green pill badge (`🎉 vX.X.X Available!`) will appear at the top.
@@ -152,10 +154,11 @@ If a website is blocking you with Cloudflare, open the **Network tab (🌐)** an
 
 ### Security and Stability
 - **Windows DPAPI Secret Protection** - Your custom headers, proxies, decryption keys, and IVs are safely encrypted via Windows DPAPI in your `config.json` file. No plaintext secrets!
+- **Credential Privacy on Resume** - Resume job records intentionally store only the source hostname (never raw stream URLs or signed access tokens).
 - **Thread-Safe Cancellation** - Responsive process cancellation with clean token lifetime management that safely terminates child process trees.
 - **In-Window Live Feedback & Progress** - Real-time progress bar, live status messages, collapsible diagnostic log, and an "Open Folder" button on completion.
 - **Accessible & Keyboard Ready** - High-contrast focus visual indicators, access keys (`Alt+G` for Go, `Alt+S` / `Escape` for Stop), and full UI automation properties.
-- **Automated Test Suite (641 Tests)** - Rock-solid stability backed by 641 unit, integration, contrast, and accessibility tests covering all core models, services, XAML a11y, and view models.
+- **Automated Test Suite (700+ Tests)** - Rock-solid stability backed by over 700 unit, integration, contrast, and accessibility tests across .NET and Node.js suites.
 
 ### Download Options
 - **Concurrent Downloads** - Download multiple streams simultaneously.

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.IO;
+using N_m3u8DL_RE_GUI.Core.Resume;
 using N_m3u8DL_RE_GUI.Services;
 using Xunit;
 
@@ -193,5 +194,26 @@ public class ResumeJobStoreTests : IDisposable
         Assert.False(discarded);
         Assert.True(File.Exists(_recordPath));
         Assert.True(Directory.Exists(tmpDir));
+    }
+
+    [Fact]
+    public void TwoDownloadsWithDifferentNamesNeverShareATempDirectory()
+    {
+        // The leak: a resumed job's directory persisted into the next download,
+        // and del-after-done then wiped the first job's partial.
+        var first = ResumePaths.ResolveTmpDir(null, null, null, @"D:\Videos", "Episode 4");
+        var second = ResumePaths.ResolveTmpDir(null, null, null, @"D:\Videos", "Episode 5");
+
+        Assert.NotEqual(first, second);
+    }
+
+    [Fact]
+    public void ResumingOneJobDoesNotChangeWhereTheNextJobGoes()
+    {
+        var duringResume = ResumePaths.ResolveTmpDir(null, @"D:\Videos\.nre-tmp\Episode 4", "Episode 4", @"D:\Videos", "Episode 4");
+        var next = ResumePaths.ResolveTmpDir(null, null, null, @"D:\Videos", "Episode 5");
+
+        Assert.NotEqual(duringResume, next);
+        Assert.Equal(ResumePaths.DeriveTmpDir(@"D:\Videos", "Episode 5"), next);
     }
 }
