@@ -337,3 +337,50 @@ export function sweepOrphanTabs(liveTabIds) {
     return stale.length;
   });
 }
+
+const UPDATE_CHECK_CACHE_KEY = 'suite_update_cache';
+const UPDATE_SUCCESS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const UPDATE_FAILURE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Gets cached suite update result from chrome.storage.local if still within TTL.
+ * Uses chrome.storage.local (survives browser restarts) because update check results
+ * contain no private user/cookie data — only a public version string and URL.
+ */
+export async function getCachedUpdateResult(now = Date.now()) {
+  try {
+    const data = await chrome.storage.local.get([UPDATE_CHECK_CACHE_KEY]);
+    const entry = data[UPDATE_CHECK_CACHE_KEY];
+    if (!entry || typeof entry !== 'object') return null;
+
+    const timestamp = entry.timestamp || 0;
+    const ttl = (entry.status === 'check-failed' || entry.status === 'unknown-version')
+      ? UPDATE_FAILURE_TTL_MS
+      : UPDATE_SUCCESS_TTL_MS;
+
+    if (now - timestamp > ttl) {
+      return null;
+    }
+
+    return entry.result || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sets cached suite update result in chrome.storage.local.
+ */
+export async function setCachedUpdateResult(result, now = Date.now()) {
+  if (!result) return;
+  try {
+    const entry = {
+      status: result.status,
+      result,
+      timestamp: now
+    };
+    await chrome.storage.local.set({ [UPDATE_CHECK_CACHE_KEY]: entry });
+  } catch (err) {
+    console.debug('Failed to cache update result', err);
+  }
+}

@@ -13,7 +13,9 @@ const {
   setCachedVariants,
   dismissStreams,
   dismissMany,
-  getDismissed
+  getDismissed,
+  getCachedUpdateResult,
+  setCachedUpdateResult
 } = await import('../lib/storage.js');
 
 const TAB = 7;
@@ -359,4 +361,28 @@ test('clearAll leaves the no-tab dismissal in place', async () => {
   await clearAll();
 
   assert.equal((await getDismissed(null)).size, 1);
+});
+
+test('a cached result is reused within the TTL', async () => {
+  await setCachedUpdateResult({ status: 'up-to-date', latestVersion: 'v2.1.5' });
+
+  assert.equal((await getCachedUpdateResult())?.status, 'up-to-date');
+});
+
+test('a cached result expires after a day', async () => {
+  const twentyFiveHoursAgo = Date.now() - 25 * 60 * 60 * 1000;
+  await setCachedUpdateResult({ status: 'up-to-date' }, twentyFiveHoursAgo);
+
+  assert.equal(await getCachedUpdateResult(), null);
+});
+
+test('a failed check is cached only briefly so a blip is not sticky', async () => {
+  const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+  await setCachedUpdateResult({ status: 'check-failed' }, tenMinutesAgo);
+
+  assert.equal(await getCachedUpdateResult(), null);
+});
+
+test('an empty cache reports nothing rather than throwing', async () => {
+  assert.equal(await getCachedUpdateResult(), null);
 });
