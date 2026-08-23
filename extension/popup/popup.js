@@ -2,14 +2,15 @@
  * N-RE Stream Bridge — Popup Logic
  */
 
-import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, clearTabView, dismissMany, undismissMany } from '../lib/storage.js';
+import { getTabStreams, getRecentStreams, sweepOrphanTabs, clearTab, clearAll, clearTabView, dismissMany, undismissMany, getCachedUpdateResult, setCachedUpdateResult } from '../lib/storage.js';
 import { formatBytes, formatRelativeTime, elideUrl, describeStream } from '../lib/format.js';
 import { KIND_TITLES } from '../lib/classify.js';
 import { toCurl, toBatchList, findRefererMismatch } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
 import { rankStreams, groupByOrigin, reconcileSelection, matchesFilter } from '../lib/list-policy.js';
 import { getExtensionVersion } from '../lib/version.js';
-import { checkExtensionUpdate } from '../lib/update-check.js';
+import { getSuiteVersion } from '../lib/suite-version.js';
+import { checkSuiteUpdate } from '../lib/update-check.js';
 
 let activeTabId = null;
 let currentView = 'current'; // 'current' | 'all'
@@ -736,20 +737,35 @@ async function init() {
 }
 
 async function initVersionAndUpdates() {
-  const version = getExtensionVersion();
+  const extVersion = getExtensionVersion();
   const versionSpan = document.getElementById('ext-version');
-  if (versionSpan) {
-    versionSpan.textContent = `v${version}`;
+  if (versionSpan && extVersion) {
+    versionSpan.textContent = `v${extVersion}`;
   }
 
-  const updateResult = await checkExtensionUpdate(version);
-  if (updateResult.hasUpdate) {
-    const badge = document.getElementById('ext-update-badge');
-    if (badge) {
-      badge.textContent = `🎉 ${updateResult.latestVersion} available`;
-      badge.href = updateResult.releaseUrl || 'https://github.com/naravid19/N_m3u8DL_RE_GUI/releases/latest';
-      badge.hidden = false;
+  try {
+    let updateResult = await getCachedUpdateResult();
+    if (!updateResult) {
+      const suiteVersion = await getSuiteVersion();
+      if (!suiteVersion) {
+        console.debug('Suite version is unavailable; skipping update check');
+        return;
+      }
+
+      updateResult = await checkSuiteUpdate(suiteVersion);
+      await setCachedUpdateResult(updateResult);
     }
+
+    if (updateResult && updateResult.status === 'update-available') {
+      const badge = document.getElementById('ext-update-badge');
+      if (badge) {
+        badge.textContent = `🎉 N_m3u8DL-RE GUI ${updateResult.latestVersion} available ↗`;
+        badge.href = updateResult.releaseUrl || 'https://github.com/naravid19/N_m3u8DL_RE_GUI/releases/latest';
+        badge.hidden = false;
+      }
+    }
+  } catch (err) {
+    console.debug('Failed to run update check in popup', err);
   }
 }
 
