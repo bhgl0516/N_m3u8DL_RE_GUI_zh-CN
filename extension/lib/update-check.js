@@ -1,5 +1,5 @@
 /**
- * Pure policy and transport functions for extension update checking.
+ * Pure policy and transport functions for suite update checking.
  */
 
 export function compareVersions(a, b) {
@@ -14,43 +14,89 @@ export function compareVersions(a, b) {
   return 0;
 }
 
+const SUITE_RELEASES_URL = "https://github.com/naravid19/N_m3u8DL_RE_GUI/releases/latest";
+
 /**
- * Checks for suite/extension updates against GitHub releases.
- * @param {string} currentVersion Current version string (e.g. "1.3.0")
- * @param {Function} [fetchFn] Custom fetch function for testability
- * @returns {Promise<{ hasUpdate: boolean, currentVersion: string, latestVersion: string, releaseUrl: string }>}
+ * Checks for suite updates against GitHub releases.
+ * @param {string|null} suiteVersion The suite version shipped with the extension
+ * @param {object} [options]
+ * @param {Function} [options.fetchFn] Custom fetch function for testability
+ * @returns {Promise<{ status: 'update-available' | 'up-to-date' | 'check-failed' | 'unknown-version', suiteVersion: string|null, latestVersion: string, releaseUrl: string }>}
  */
-export async function checkExtensionUpdate(currentVersion, fetchFn = (typeof fetch !== "undefined" ? fetch : null)) {
+export async function checkSuiteUpdate(suiteVersion, options = {}) {
+  if (!suiteVersion || typeof suiteVersion !== "string" || !suiteVersion.trim()) {
+    return {
+      status: "unknown-version",
+      suiteVersion: null,
+      latestVersion: "",
+      releaseUrl: ""
+    };
+  }
+
+  const cleanSuiteVersion = suiteVersion.trim();
+  const fetchFn = options.fetchFn || (typeof fetch !== "undefined" ? fetch : null);
+
   if (!fetchFn) {
-    return { hasUpdate: false, currentVersion, latestVersion: "", releaseUrl: "" };
+    return {
+      status: "check-failed",
+      suiteVersion: cleanSuiteVersion,
+      latestVersion: "",
+      releaseUrl: ""
+    };
   }
 
   try {
-    const response = await fetchFn("https://github.com/naravid19/N_m3u8DL_RE_GUI/releases/latest", {
-      redirect: "manual"
-    });
-
-    const location = response?.headers?.get?.("location") || "";
-    if (!location) {
-      return { hasUpdate: false, currentVersion, latestVersion: "", releaseUrl: "" };
+    let response;
+    try {
+      response = await fetchFn(SUITE_RELEASES_URL, {
+        method: "HEAD",
+        redirect: "follow"
+      });
+    } catch (headErr) {
+      console.debug("HEAD request failed, trying default fetch", headErr);
+      response = await fetchFn(SUITE_RELEASES_URL, {
+        redirect: "follow"
+      });
     }
 
-    const match = location.match(/\/tag\/v?([0-9]+\.[0-9]+\.[0-9]+)/);
+    if (!response || !response.url) {
+      return {
+        status: "check-failed",
+        suiteVersion: cleanSuiteVersion,
+        latestVersion: "",
+        releaseUrl: ""
+      };
+    }
+
+    const finalUrl = response.url;
+    // Strict 3-component semantic version tag match
+    const match = finalUrl.match(/\/tag\/v?([0-9]+\.[0-9]+\.[0-9]+)(?:[/?#]|$)/);
     if (!match) {
-      return { hasUpdate: false, currentVersion, latestVersion: "", releaseUrl: "" };
+      return {
+        status: "check-failed",
+        suiteVersion: cleanSuiteVersion,
+        latestVersion: "",
+        releaseUrl: ""
+      };
     }
 
     const latestTag = match[1];
-    const isNewer = compareVersions(latestTag, currentVersion) > 0;
+    const isNewer = compareVersions(latestTag, cleanSuiteVersion) > 0;
 
     return {
-      hasUpdate: isNewer,
-      currentVersion,
+      status: isNewer ? "update-available" : "up-to-date",
+      suiteVersion: cleanSuiteVersion,
       latestVersion: `v${latestTag}`,
-      releaseUrl: location
+      releaseUrl: finalUrl
     };
-  } catch {
-    return { hasUpdate: false, currentVersion, latestVersion: "", releaseUrl: "" };
+  } catch (err) {
+    console.debug("Suite update check failed:", err);
+    return {
+      status: "check-failed",
+      suiteVersion: cleanSuiteVersion,
+      latestVersion: "",
+      releaseUrl: ""
+    };
   }
 }
 
