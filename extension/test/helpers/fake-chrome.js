@@ -1,6 +1,8 @@
-/** Minimal in-memory stand-in for a chrome.storage area. No mocking library. */
+/** Minimal in-memory stand-in for chrome runtime, storage, and local extension resources. No mocking library. */
 export function installFakeChrome() {
   let store = {};
+  const resources = new Map();
+  const origFetch = globalThis.fetch;
 
   const area = {
     get: async (keys) => {
@@ -20,11 +22,47 @@ export function installFakeChrome() {
     }
   };
 
-  globalThis.chrome = { storage: { session: area, local: area } };
+  const runtime = {
+    getURL: (path) => `chrome-extension://fakeid/${String(path).replace(/^\//, '')}`,
+    getManifest: () => ({ version: '1.3.0' })
+  };
+
+  globalThis.chrome = {
+    storage: { session: area, local: area },
+    runtime
+  };
+
+  globalThis.fetch = async (input, init) => {
+    const urlStr = typeof input === 'string' ? input : input?.url || '';
+    if (urlStr.startsWith('chrome-extension://fakeid/')) {
+      const path = urlStr.replace('chrome-extension://fakeid/', '');
+      if (resources.has(path)) {
+        const content = resources.get(path);
+        if (content === null) {
+          return { ok: false, status: 404, text: async () => '' };
+        }
+        return { ok: true, status: 200, text: async () => content };
+      }
+      return { ok: false, status: 404, text: async () => '' };
+    }
+    if (typeof origFetch === 'function') {
+      return origFetch(input, init);
+    }
+    throw new Error(`Unhandled fetch: ${urlStr}`);
+  };
 
   return {
     area,
-    reset: () => { store = {}; },
-    snapshot: () => ({ ...store })
+    reset: () => {
+      store = {};
+      resources.clear();
+    },
+    snapshot: () => ({ ...store }),
+    setResourceText: (path, text) => {
+      resources.set(String(path).replace(/^\//, ''), text);
+    },
+    setResourceMissing: (path) => {
+      resources.set(String(path).replace(/^\//, ''), null);
+    }
   };
 }
