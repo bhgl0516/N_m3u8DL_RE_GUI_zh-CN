@@ -284,4 +284,7 @@ test.txt
 /docs/
 /references
 /graphify-out
-/.impeccable
+/.impeccable
+
+# Generated from Directory.Build.props on every build — never hand-edit.
+/extension/suite-version.json
