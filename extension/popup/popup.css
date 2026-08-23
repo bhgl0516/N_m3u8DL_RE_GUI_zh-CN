@@ -402,16 +402,6 @@ body {
   text-transform: lowercase;
 }
 
-.badge-recommended {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: #6EE7B7;
-  background: rgba(16, 185, 129, 0.18);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
 .stream-desc {
   font-size: var(--text-xs);
   color: #A0A0B8;

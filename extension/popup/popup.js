@@ -334,13 +334,6 @@ function createStreamCard(item, index, totalCount, allDisplayed) {
     metaLeft.appendChild(guessBadge);
   }
 
-  if (index === 0) {
-    const recBadge = document.createElement('span');
-    recBadge.className = 'badge-recommended';
-    recBadge.textContent = filterQuery ? '⭐ Best match' : '⭐ Recommended';
-    metaLeft.appendChild(recBadge);
-  }
-
   const descText = describeStream(item);
   if (descText) {
     const descSpan = document.createElement('span');
