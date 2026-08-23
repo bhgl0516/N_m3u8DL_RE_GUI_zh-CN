@@ -124,6 +124,17 @@ namespace N_m3u8DL_RE_GUI
             InitializeComponent();
             _downloadButtonLabel = Button_GO.Content;
 
+            var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            if (appVersion != null)
+            {
+                var verString = $"v{appVersion.Major}.{appVersion.Minor}.{Math.Max(0, appVersion.Build)}";
+                Title = $"N_m3u8DL-RE GUI {verString}";
+                if (TextBlock_AppVersion != null)
+                {
+                    TextBlock_AppVersion.Text = verString;
+                }
+            }
+
             CommandBindings.Add(new CommandBinding(
                 StartDownloadRoutedCommand,
                 (_, _) => Button_GO_Click(Button_GO, new RoutedEventArgs()),

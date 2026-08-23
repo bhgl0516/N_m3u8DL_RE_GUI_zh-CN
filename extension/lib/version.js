@@ -9,6 +9,6 @@ export function getExtensionVersion() {
       return manifest.version;
     }
   }
-  return "1.3.0";
+  return "";
 }
 

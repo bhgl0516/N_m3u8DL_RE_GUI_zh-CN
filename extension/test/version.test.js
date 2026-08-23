@@ -18,6 +18,16 @@ test('getExtensionVersion reads from chrome.runtime.getManifest() when available
   }
 });
 
+test('getExtensionVersion returns empty string when chrome runtime is unavailable', () => {
+  const origChrome = globalThis.chrome;
+  try {
+    globalThis.chrome = undefined;
+    assert.equal(getExtensionVersion(), '');
+  } finally {
+    globalThis.chrome = origChrome;
+  }
+});
+
 test('manifest.json and package.json version stay synchronized', () => {
   const manifest = JSON.parse(readFileSync(resolve('extension/manifest.json'), 'utf8'));
   const pkg = JSON.parse(readFileSync(resolve('extension/package.json'), 'utf8'));
