@@ -596,6 +596,37 @@ body {
   margin-top: 6px;
 }
 
+.footer-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: #66667C;
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+.ext-version {
+  font-size: var(--text-xs);
+  color: #66667C;
+}
+
+.ext-update-badge {
+  font-size: var(--text-xs);
+  color: #60A5FA;
+  text-decoration: none;
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ext-update-badge:hover {
+  background: rgba(96, 165, 250, 0.25);
+  color: #93C5FD;
+}
+
 .toast {
   display: none;
   align-items: center;

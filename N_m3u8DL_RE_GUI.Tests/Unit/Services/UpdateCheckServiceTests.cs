@@ -165,4 +165,11 @@ public class GitHubUpdateCheckServiceTests
 
         Assert.Equal(UpdateCheckStatus.CheckFailed, result.Status);
     }
+
+    [Fact]
+    public void AppVersion_MatchesExpectedVersionFromDirectoryBuildProps()
+    {
+        var coreAssembly = typeof(IUpdateCheckService).Assembly;
+        Assert.Equal("2.1.5", coreAssembly.GetName().Version?.ToString(3));
+    }
 }

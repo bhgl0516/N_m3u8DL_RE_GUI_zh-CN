@@ -8,6 +8,8 @@ import { KIND_TITLES } from '../lib/classify.js';
 import { toCurl, toBatchList, findRefererMismatch } from '../lib/curl.js';
 import { probeVariants } from '../lib/probe.js';
 import { rankStreams, groupByOrigin, reconcileSelection, matchesFilter } from '../lib/list-policy.js';
+import { getExtensionVersion } from '../lib/version.js';
+import { checkExtensionUpdate } from '../lib/update-check.js';
 
 let activeTabId = null;
 let currentView = 'current'; // 'current' | 'all'
@@ -726,8 +728,29 @@ async function init() {
   // Render immediately for fast UI
   renderStreams();
 
+  // Initialize version display and check for updates
+  initVersionAndUpdates();
+
   // Sweep orphaned tab keys in background after first render
   sweepOnOpen();
+}
+
+async function initVersionAndUpdates() {
+  const version = getExtensionVersion();
+  const versionSpan = document.getElementById('ext-version');
+  if (versionSpan) {
+    versionSpan.textContent = `v${version}`;
+  }
+
+  const updateResult = await checkExtensionUpdate(version);
+  if (updateResult.hasUpdate) {
+    const badge = document.getElementById('ext-update-badge');
+    if (badge) {
+      badge.textContent = `🎉 ${updateResult.latestVersion} available`;
+      badge.href = updateResult.releaseUrl || 'https://github.com/naravid19/N_m3u8DL_RE_GUI/releases/latest';
+      badge.hidden = false;
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
