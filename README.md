@@ -159,7 +159,7 @@ If a website is blocking you with Cloudflare, open the **Network tab (🌐)** an
 - **Thread-Safe Cancellation** - Responsive process cancellation with clean token lifetime management that safely terminates child process trees.
 - **In-Window Live Feedback & Progress** - Real-time progress bar, live status messages, collapsible diagnostic log, and an "Open Folder" button on completion.
 - **Accessible & Keyboard Ready** - High-contrast focus visual indicators, access keys (`Alt+G` for Go, `Alt+S` / `Escape` for Stop), and full UI automation properties.
-- **Automated Test Suite (700+ Tests)** - Rock-solid stability backed by over 700 unit, integration, contrast, and accessibility tests across .NET and Node.js suites.
+- **Automated Test Suite (900+ Tests)** - Rock-solid stability backed by over 960 unit, integration, contrast, and accessibility tests across .NET (723 tests) and Node.js (246 tests) suites.
 
 ### Download Options
 - **Concurrent Downloads** - Download multiple streams simultaneously.
