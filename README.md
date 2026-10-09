@@ -1,10 +1,23 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<!-- 提升“返回顶部”链接的兼容性：参见 https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
 <a id="readme-top"></a>
 
-**English** | [简体中文](README.zh-CN.md)
+[English](README.en.md) | **简体中文**
 
-<!-- PROJECT SHIELDS -->
+> ## ⚠️ 本仓库说明（简体中文增强衍生版）
+>
+> 本仓库基于 **[naravid19/N_m3u8DL_RE_GUI](https://github.com/naravid19/N_m3u8DL_RE_GUI)**，遵循 **MIT 协议**（详见 [LICENSE](LICENSE)）。
+>
+> 相对上游的改动：
+> - **全面简体中文化**：界面、菜单、日志与异常弹窗改为简体中文，全局字号 +2；
+> - **界面字体可选择 / 导入**：顶部工具栏可切换系统字体或导入本地 `.ttf`/`.otf`/`.ttc`（可选内置「京華老宋体-GJ」）；
+> - **Cloudflare 绕过脚本重写**：自动代理（含 Clash `127.0.0.1:7897`）、多线程并发、断点续传、UTF-8 输出修复；
+> - **B 站支持**：内置 `yt-dlp` 下载（BV/av/b23 链接）；
+> - **日志防卡死**：环形缓冲 + 刷新节流。
+>
+> 完整改动清单见 [CHANGES.zh-CN.md](CHANGES.zh-CN.md)；代码结构与数据流见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
+<!-- 项目徽章 -->
 
 [![Version][version-shield]][version-url]
 [![.NET][dotnet-shield]][dotnet-url]
@@ -12,7 +25,7 @@
 [![C#][csharp-shield]][csharp-url]
 [![License][license-shield]][license-url]
 
-<!-- PROJECT LOGO -->
+<!-- 项目标志 -->
 <br />
 <div align="center">
   <a href="https://github.com/naravid19/N_m3u8DL_RE_GUI">
@@ -22,237 +35,297 @@
   <h3 align="center">N_m3u8DL-RE GUI</h3>
 
   <p align="center">
-    A modern, user-friendly Windows GUI wrapper for the powerful N_m3u8DL-RE CLI tool.
+    为强大的 N_m3u8DL-RE 命令行工具打造的现代化、易用的 Windows 图形界面。
     <br />
-    <a href="https://github.com/nilaoda/N_m3u8DL-RE"><strong>View Original CLI Tool</strong></a>
+    <a href="https://github.com/nilaoda/N_m3u8DL-RE"><strong>查看原版命令行工具</strong></a>
     <br />
     <br />
-    <a href="#getting-started">Getting Started</a>
+    <a href="#getting-started">快速开始</a>
     ·
-    <a href="https://github.com/naravid19/N_m3u8DL_RE_GUI/issues/new?labels=bug">Report Bug</a>
+    <a href="https://github.com/naravid19/N_m3u8DL_RE_GUI/issues/new?labels=bug">报告问题</a>
     ·
-    <a href="https://github.com/naravid19/N_m3u8DL_RE_GUI/issues/new?labels=enhancement">Request Feature</a>
+    <a href="https://github.com/naravid19/N_m3u8DL_RE_GUI/issues/new?labels=enhancement">功能建议</a>
   </p>
 </div>
 
-<!-- ABOUT THE PROJECT -->
+<!-- 关于本项目 -->
 
-## About The Project
+## 关于本项目
 
 <div align="center">
-  <img src="images/screenshot.png" alt="Product Screenshot" width="80%">
+  <img src="images/screenshot.png" alt="产品截图" width="80%">
 </div>
 
-**N_m3u8DL-RE GUI** provides a graphical interface for the [N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE) command-line tool. It makes downloading DASH, HLS, and MSS streams incredibly easy—no need to memorize complex command-line arguments anymore!
+**N_m3u8DL-RE GUI** 为 [N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE) 命令行工具提供图形界面，让下载 DASH、HLS 和 MSS 流媒体变得非常简单——再也不用记忆复杂的命令行参数！
 
-### Main Benefits:
+### 主要优势：
 
-- 🚀 **No command-line memorization** - Common options are available through simple UI controls.
-- ⏯️ **Resume Interrupted Downloads** - Automatically detects stopped or crashed downloads with existing segments on disk. Seamlessly attach a fresh stream link (since signed URLs expire quickly) and resume without losing previously downloaded chunks.
-- 🎬 **Native Abyss & Hydrax Support** - Direct AES-CTR chunk decryption and assembly for `abysscdn.com`, `playhydrax.com`, `zplayer.io`, and `short.ink` without external tools, with a picker when a video offers several qualities.
-- 🌏 **Speaks Your Language** - The whole interface, status messages included, switches instantly between English, 简体中文, and 繁體中文.
-- 📦 **Batch processing** - Download multiple streams from text files or folders with one click.
-- 🔒 **Privacy First** - Your settings and headers are automatically saved between sessions and heavily encrypted using Windows DPAPI.
-- 🛡️ **Cloudflare WAF Bypass** - Built-in TLS fingerprint impersonation to bypass Cloudflare security seamlessly.
+- 🚀 **无需记忆命令行** - 常用选项都可以通过简单的界面控件完成。
+- ⏯️ **断点续传** - 自动发现已停止或崩溃、磁盘上仍留有分片的下载。由于带签名的链接很快就会过期，你可以直接换上一条新的流链接，继续下载而不丢失已下载的分片。
+- 🎬 **原生支持 Abyss 与 Hydrax** - 无需外部工具，直接对 `abysscdn.com`、`playhydrax.com`、`zplayer.io` 和 `short.ink` 进行 AES-CTR 分片解密与合并；视频提供多种画质时会弹出选择窗口。
+- 🌏 **简体中文界面** - 界面、状态提示、日志与异常弹窗已全面简体中文化；另有「下载器语言」可控制 N_m3u8DL-RE 控制台输出语言。
+- 🔤 **可换字体** - 顶部可切换系统字体，或导入本地字体文件；推荐开源古籍宋体「京華老宋体-GJ」。
+- 🅱️ **B 站支持** - 直接粘贴 BV/av/`b23.tv` 链接，自动调用内置 `yt-dlp` 下载。
+- 📦 **批量处理** - 一键从文本文件或文件夹中批量下载多个流。
+- 🔒 **隐私优先** - 你的设置和请求头会在会话之间自动保存，并使用 Windows DPAPI 加密。
+- 🛡️ **绕过 Cloudflare WAF** - 内置 TLS 指纹模拟，顺畅绕过 Cloudflare 的安全防护。
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="#readme-top">返回顶部</a>)</p>
 
 ---
 
-<!-- GETTING STARTED -->
+<!-- 项目结构 -->
+
+<a id="project-structure"></a>
+
+## 项目结构（代表文件）
+
+本仓库为 WPF + MVVM 解决方案，包含三个 .NET 项目与一个浏览器扩展：
+
+```text
+N_m3u8DL_RE_GUI/            # WPF 主程序（net9.0-windows）
+├── App.xaml(.cs)           # 应用入口、全局异常处理、依赖注入初始化
+├── MainWindow.xaml(.cs)    # 主窗口与全部交互逻辑；URL 分发、CF / B 站 / 续传分支
+├── ViewModels/             # MVVM：MainViewModel、ViewModelLocator（DI 容器）
+├── Views/                  # StreamPickerWindow（画质选择窗口）
+├── Services/               # 下载、配置、批量、拖放、续传等服务实现
+└── Converters/ Fonts/ Properties/
+
+N_m3u8DL_RE_GUI.Core/       # 纯逻辑库（net9.0，无 UI 依赖）
+├── ArgsBuilder.cs          # DownloadOptions → N_m3u8DL-RE 命令行
+├── CfCommandBuilder.cs     # CfCommandOptions → Python CF 绕过命令
+└── Capture/ Abyss/ Resume/ Services/
+
+N_m3u8DL_RE_GUI.Tests/      # xUnit 单元 / 集成 / 一致性 / 无障碍测试
+extension/                  # 浏览器扩展 N-RE Stream Bridge（v1.4.5）
+
+ARCHITECTURE.md             # 架构、类职责与数据流（含 mermaid 图）
+CHANGES.zh-CN.md            # 相对上游的改动清单
+```
+
+> 完整的目录树、每个文件的职责、关键类 / 方法索引，以及输入分发、命令行构造、CF 绕过、断点续传的数据流图，请见 **[ARCHITECTURE.md](ARCHITECTURE.md)**。
+
+<p align="right">(<a href="#readme-top">返回顶部</a>)</p>
+
+---
+
+<!-- 快速开始 -->
 
 <a id="getting-started"></a>
 
-## Getting Started (Installation)
+## 快速开始（安装）
 
-We have intentionally kept the installation process as simple as possible. No installers, no complicated setups.
+我们刻意让安装过程尽可能简单：没有安装程序，也没有繁琐的配置。
 
-### 1. Download
+### 1. 下载
 
-Download the latest release (`N_m3u8DL_RE_GUI_v2.1.6.zip`) from our [GitHub Releases](https://github.com/naravid19/N_m3u8DL_RE_GUI/releases) page.
+从 [GitHub Releases](https://github.com/bhgl0516/N_m3u8DL_RE_GUI_zh-CN/releases) 页面下载最新版本（`N_m3u8DL_RE_GUI_v2.1.6_zh-CN.zip`）。
 
-### 2. Extract
+### 2. 解压
 
-Extract the `.zip` file anywhere on your computer. Inside the folder, you will find 4 core files plus the optional companion browser extension:
+将 `.zip` 文件解压到电脑上的任意位置。文件夹内包含核心文件、B 站下载引擎、可选字体，以及配套浏览器扩展：
 
 ```text
-N_m3u8DL_RE_GUI_v2.1.6/
-├── N_m3u8DL_RE_GUI.exe    <-- The main application (Double click this!)
-├── N_m3u8DL-RE.exe        <-- The core download engine
-├── ffmpeg.exe             <-- The video/audio muxing engine
-├── m3u8_cf_bypass.py      <-- The Cloudflare TLS bypass script
-└── extension/             <-- Optional browser companion (see below)
+N_m3u8DL_RE_GUI_v2.1.6_zh-CN/
+├── N_m3u8DL_RE_GUI.exe    <-- 主程序（双击运行！）
+├── N_m3u8DL-RE.exe        <-- 核心下载引擎
+├── ffmpeg.exe             <-- 音视频合并引擎
+├── m3u8_cf_bypass.py      <-- Cloudflare TLS 绕过脚本
+├── yt-dlp.exe             <-- B 站（Bilibili）下载引擎
+├── 京華老宋体-GJ古籍表字形.ttf  <-- 可选古籍宋体字体（见下文「界面字体」）
+└── extension/             <-- 可选的浏览器配套扩展（见下文）
 ```
 
-### 3. Run
+### 3. 运行
 
-Simply double-click `N_m3u8DL_RE_GUI.exe` to launch the application.
+双击 `N_m3u8DL_RE_GUI.exe` 即可启动应用。
 
 > [!NOTE]
-> **Python Requirement:** If you plan to use the **Cloudflare Bypass** feature, make sure you have Python installed on your Windows machine, and run `pip install curl_cffi` in your command prompt.
+> **Python 要求：** 如果你打算使用 **Cloudflare 绕过** 功能，请确保 Windows 上已安装 Python，并在命令提示符中运行 `pip install curl_cffi`。
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="#readme-top">返回顶部</a>)</p>
 
 ---
 
-<!-- USAGE -->
+<!-- 使用方法 -->
 
-## Usage Guide
+## 使用指南
 
-### Quick Start
+### 快速上手
 
-1. **Enter URL** - Paste your `.m3u8`, `.mpd`, or stream URL in the top URL field.
-2. **Configure Options** - Select desired options from the sidebar tabs (e.g., Audio Only, Sub Only).
-3. **Click GO** - The application will automatically generate the CLI command and start downloading.
+1. **输入 URL** - 在顶部 URL 栏粘贴你的 `.m3u8`、`.mpd` 或其他流媒体地址。
+2. **配置选项** - 在侧边栏标签页中选择需要的选项（例如仅音频、仅字幕）。
+3. **点击 GO** - 应用会自动生成命令行并开始下载。
 
-### Input Methods Supported
+### 支持的输入方式
 
-| Method      | How to use                            |
+| 方式 | 使用方法 |
 | ----------- | ------------------------------------- |
-| ⬇ 1-Click Download | Click **⬇ Download** in the Browser Extension to automatically queue and start downloads in the GUI over Native Messaging. |
-| 📋 Paste from Browser | Copy a request as cURL from browser DevTools (F12) or click **Copy as cURL** in the Browser Extension, then click **📋 Paste from browser**. |
-| 🗂️ HAR Capture Drop | Drag a `.har` network capture onto the GUI. If multiple streams are found, an interactive picker window lets you select the master stream. |
-| 🎬 Abyss / Hydrax | Paste `abysscdn.com/?v=...`, `playhydrax.com/?v=...`, `zplayer.io/?v=...`, or `short.ink/...` directly. The GUI fetches the available qualities and downloads chunks natively. When more than one quality is offered you pick one (largest listed first); a download started by the browser extension takes the largest automatically. |
-| Direct URL  | Paste a standard `.m3u8`, `.mpd`, or `.mp4` stream URL directly into the top bar. |
-| Drag & Drop | Drag `.m3u8`, `.mpd`, or `.txt` files directly into the window. |
-| Batch File  | Drop a `.txt` file containing multiple URLs (one per line). |
-| Folder      | Drop a folder containing stream files to batch process them all. |
+| ⬇ 一键下载 | 在浏览器扩展中点击 **⬇ Download**，通过 Native Messaging 自动把下载任务排入 GUI 并开始下载。 |
+| 📋 从浏览器粘贴 | 在浏览器开发者工具（F12）中把请求复制为 cURL，或在浏览器扩展中点击 **Copy as cURL**，然后点击 **📋 Paste from browser**。 |
+| 🗂️ 拖入 HAR 抓包 | 把 `.har` 网络抓包文件拖到 GUI 上。如果发现多个流，会弹出交互式选择窗口，让你挑选主流。 |
+| 🎬 Abyss / Hydrax | 直接粘贴 `abysscdn.com/?v=...`、`playhydrax.com/?v=...`、`zplayer.io/?v=...` 或 `short.ink/...`。GUI 会获取可用画质并原生下载分片。提供多种画质时由你选择（体积最大的排在最前）；由浏览器扩展发起的下载会自动选择最大的。 |
+| 直接输入 URL | 在顶部栏直接粘贴标准的 `.m3u8`、`.mpd` 或 `.mp4` 流地址。 |
+| 拖放文件 | 把 `.m3u8`、`.mpd` 或 `.txt` 文件直接拖入窗口。 |
+| 批量文件 | 拖入包含多个 URL 的 `.txt` 文件（每行一个）。 |
+| 文件夹 | 拖入包含流文件的文件夹，批量处理其中所有文件。 |
 
-### N-RE Stream Bridge Browser Extension (v1.4.5)
+### N-RE Stream Bridge 浏览器扩展（v1.4.5）
 
-Use the companion browser extension **N-RE Stream Bridge** in `extension/` for 1-click stream capture, quality selection, and multi-URL batch queues in Chrome, Edge, and Brave:
-1. Open `chrome://extensions` and enable **Developer mode**.
-2. Click **Load unpacked** and select the `extension/` folder.
-3. Play any video or audio in your browser → click the extension icon.
-4. **Single Stream:** Click **`▸ Qualities`** to pick your resolution (1080p, 720p, etc.) → **`⬇ Download`** (or **`📋 Copy as cURL`**).
-5. **Batch Streams:** Check multiple stream rows → click **`📋 Copy as list`**.
-6. In the GUI, click **`📋 Paste from browser`** (or Ctrl+V) → All stream URLs, headers, and quality selectors are filled instantly!
+使用 `extension/` 中的配套浏览器扩展 **N-RE Stream Bridge**，即可在 Chrome、Edge 和 Brave 中一键抓取流、选择画质并建立多 URL 批量队列：
+1. 打开 `chrome://extensions` 并启用**开发者模式**。
+2. 点击**加载已解压的扩展程序**，选择 `extension/` 文件夹。
+3. 在浏览器中播放任意视频或音频 → 点击扩展图标。
+4. **单个流：** 点击 **`▸ Qualities`** 选择分辨率（1080p、720p 等）→ **`⬇ Download`**（或 **`📋 Copy as cURL`**）。
+5. **批量流：** 勾选多个流 → 点击 **`📋 Copy as list`**。
+6. 在 GUI 中点击 **`📋 Paste from browser`**（或按 Ctrl+V）→ 所有流的 URL、请求头和画质选择器都会立即填好！
 
 > [!TIP]
-> **1-click download:** once the GUI has been run at least once, the popup shows a **`⬇ Download`** button beside `📋 Copy as cURL`. It hands the stream — URL, headers, merged cookies, and the selected quality — straight to the GUI and starts the download, with no copy-paste and no window switching. Click it while a download is already running and the stream simply queues behind it.
+> **一键下载：** 只要 GUI 至少运行过一次，弹窗里就会在 `📋 Copy as cURL` 旁边出现 **`⬇ Download`** 按钮。它会把流（URL、请求头、合并后的 Cookie 和所选画质）直接交给 GUI 并开始下载，无需复制粘贴，也无需切换窗口。如果下载正在进行中点击它，这个流会自动排在当前下载之后。
 
 > [!NOTE]
-> **Stream Coverage & Privacy:** Supports **HLS** (`.m3u8`), **DASH** (`.mpd`), **Smooth Streaming** (`.ism`/`/Manifest`), **Abyss/Hydrax**, standalone audio (`.m4a`, `.opus`, `.flac`, `.wav`, `.aac`, `.mp3`), and progressive formats (`.mp4`, `.m4v`, `.webm`, `.mkv`, etc.). Automatically suppresses segment flooding to keep manifests visible, shows live file sizes and confidence badges, probes stream renditions strictly on demand, and uses memory-backed `chrome.storage.session` so sensitive cookies are never written unencrypted to disk.
+> **流覆盖范围与隐私：** 支持 **HLS**（`.m3u8`）、**DASH**（`.mpd`）、**Smooth Streaming**（`.ism`/`/Manifest`）、**Abyss/Hydrax**、独立音频（`.m4a`、`.opus`、`.flac`、`.wav`、`.aac`、`.mp3`）以及渐进式格式（`.mp4`、`.m4v`、`.webm`、`.mkv` 等）。扩展会自动抑制大量分片请求以保持清单可见，显示实时文件大小和置信度徽章，仅在需要时才探测各画质，并使用内存中的 `chrome.storage.session`，因此敏感 Cookie 绝不会以明文写入磁盘。
 
-### How to use Cloudflare Bypass
+### 如何使用 Cloudflare 绕过
 
-If a website is blocking you with Cloudflare, open the **Network tab (🌐)** and find the **⚡ Cloudflare Bypass (curl_cffi)** section:
-1. Tick **Enable Cloudflare Bypass**.
-2. Choose your bypass **Engine**:
-   - **Auto (Recommended)** - Downloads plain HLS directly via multi-threaded `curl_cffi`, and spins up the local proxy server for DASH/MSS/CENC streams. If a direct HLS download finds something it cannot assemble (fMP4 init segments, separate audio tracks, byte-range segments), it hands the job to the proxy engine by itself.
-   - **CF Direct (HLS only)** - Directly downloads and merges plain HLS streams using concurrent worker threads. It refuses fMP4 / separate-audio / byte-range playlists instead of writing a broken file; use *Auto* or *Proxy* for those.
-   - **CF Proxy + RE (DASH / MSS / DRM)** - Starts a local `--serve` ephemeral proxy server (`127.0.0.1:0`) with token authentication and SSRF protection to rewrite manifests and forward requests to N_m3u8DL-RE. A custom or system proxy is not applied on this path, because N_m3u8DL-RE only talks to the local proxy.
-3. Select a browser fingerprint (e.g., `chrome131`, `chrome120`, `edge101`, `safari17_0`).
-4. Enter `Referer` or `CF Cookie` if needed — or simply click **📋 Paste from browser** to populate them automatically from the extension.
-5. Click **▶ GO**.
+如果网站用 Cloudflare 拦截了你，请打开 **网络标签页（🌐）**，找到 **⚡ Cloudflare 绕过 (curl_cffi)** 区域：
+1. 勾选 **启用 Cloudflare 绕过**。
+2. 选择浏览器 **TLS 指纹**（如 `chrome`、`chrome131`、`chrome120`、`edge101`、`safari17_0`，默认 `chrome`）。
+3. 按需填写 `Referer` 或 `CF Cookie`——或者直接点击 **📋 Paste from browser**，从扩展自动填入。
+4. （可选）填写 **代理**；留空则自动探测（优先环境变量 `HTTP(S)_PROXY` / `ALL_PROXY`，其次 Windows 系统代理，可自动识别 Clash `http://127.0.0.1:7897`）。填 `direct` / `none` 表示强制不使用代理。
+5. （可选）**分片线程数**取自「最大下载线程数」（默认 16，上限 64）。
+6. （可选）勾选 **保留分片文件**（默认合并完成后删除分片）。
+7. 点击 **▶ GO**。GUI 会生成一个 `.bat` 调用 `python m3u8_cf_bypass.py`，分片下载到 `<保存目录>\cf_segments`，最后用 `ffmpeg` 合并为 `<保存名称>.mp4`。
+
+> [!NOTE]
+> **作用范围：** CF 模式运行 Python 脚本而非 N_m3u8DL-RE，因此仅使用 **输入链接、保存目录、保存名称** 及本区域字段，其余标签页选项会被忽略。使用前请确保已安装 Python 并执行 `pip install curl_cffi`。
 
 > [!TIP]
-> **Credential Privacy:** The parameters preview bar shows the real command, credentials included, so that **📋 Copy** gives you something you can paste into a terminal and run as-is. A cookie you paste is therefore visible on screen — worth knowing before you share a screenshot or a recording. Once a Cloudflare-bypass download starts, the bar is replaced by a masked snapshot of that command (`--cookie "...(masked, 412 chars)"`) for the rest of the run, while the launched process receives the full value.
+> **恢复已停止的下载：** 如果绕过下载中途停止或失败，只需粘贴同一个 URL 和保存名称，再次点击 **▶ GO**——磁盘上已保存的分片会被识别并跳过，下载会接着进行，而不是从 0% 重新开始。
 
-> [!TIP]
-> **Resuming a Stopped Download:** If a Cloudflare-bypass download is stopped or fails partway through, just paste the same URL and Save Name and click **▶ GO** again — segments already saved to disk are detected and skipped, so the download continues instead of restarting from 0%.
+### 如何下载 B 站（Bilibili）视频
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+B 站无需任何界面设置，直接把链接粘到顶部 URL 栏即可自动识别并改用内置 `yt-dlp` 下载：
 
----
+1. 支持 **BV 号**（如 `BV1xx411c7mD`）、**av 号**（如 `av170001`），以及 `bilibili.com` / `b23.tv` / `b23.wtf` 链接；直接输入 BV/av 号会自动补全为 `https://www.bilibili.com/video/<id>`。
+2. 点击 **▶ GO**。GUI 调用发布包内的 `yt-dlp.exe`，等价参数为 `-f "bv*+ba/b" --merge-output-format mp4`。
+3. **并发分片数**取自「最大下载线程数」（默认 16，上限 64），通过 `--concurrent-fragments` 传入。
+4. `--add-header` 会带上界面中填写的自定义请求头。
+5. 需要 `yt-dlp.exe` 与 `ffmpeg.exe`（用于合并音视频）位于同一目录——发布包已内置。
 
-<!-- FEATURES -->
+### 如何更换界面字体
 
-## Detailed Features
+1. 顶部工具栏「字体」下拉框可切换为任意系统已安装字体，立即生效。
+2. 点击「导入」可加载本地 `.ttf` / `.otf` / `.ttc` 字体文件并应用。
+3. 选择结果会保存到配置，下次启动自动恢复。
+4. 推荐使用内置的开源古籍宋体 **京華老宋体-GJ**（详见下文「界面字体」）。
 
-### Core Features
-- **Universal Stream Capture** - 1-click **⬇ Download** over Native Messaging, paste browser cURL commands directly, drag-and-drop `.har` captures with automated stream ranking and picking, or use the **N-RE Stream Bridge** browser extension. Every capture starts clean: the decryption key, Cloudflare bypass, and TLS profile are reset, so nothing carries over from the previous stream; your own proxy setting is kept.
-- **Resume Interrupted Downloads** - Automatically derives deterministic temp directories (`<saveDir>/.nre-tmp/<saveName>`) and persists active job metadata. On startup, detects unfinished downloads with saved segments, offers a 1-click resume workflow with a fresh stream link, or clean discards.
-- **Native Abyss / Hydrax Downloader** - Built-in zero-dependency C# crypto engine that decrypts and reassembles fragmented chunks from `abysscdn.com`, `playhydrax.com`, `zplayer.io`, and `short.ink`. Verifies chunk sizes on disk and resumes a stopped or interrupted download from its exact byte offset instead of restarting, with honest cancellation reporting and accurate live progress tracking. Videos offered in several qualities open a quality picker (largest first).
-- **Hardened Cloudflare WAF Bypass** - Multi-threaded segment downloader (`curl_cffi`), browser fingerprint impersonation, manifest rewriter & proxy mode (`--serve`) for DASH/MSS/DRM streams, honest exit code handling, and automatic segment resume from a deterministic per-download job directory (re-running the same URL and Save Name skips segments already on disk).
-- **3-Zone Modern UX/UI Architecture** - Clean layout with a top URL hero bar, a 6-Tab sidebar (`📦 Download`, `🌐 Network`, `🔒 Security`, `🎬 Media`, `📡 Live`, `⚙️ Advanced`), and a fixed command preview bar at the bottom.
-- **GUI Auto-Update Engine** - Zero rate-limit HTTP update checker. If a new version is released, a green pill badge (`🎉 vX.X.X Available!`) will appear at the top.
-- **Multi-Language Interface** - English, 简体中文, and 繁體中文, switched live from the header with no restart. Labels, dialogs, status messages, the resume banner, and update status are all translated; the technical log stays in English. The language follows your Windows display language on first launch.
-- **Full RE Support** - Compatible with all major N_m3u8DL-RE command-line arguments.
-- **Batch Downloads** - Process multiple URLs from text files or drop entire folders of streams.
-- **Config Persistence** - Settings are saved automatically between sessions.
-
-### Security and Stability
-- **Windows DPAPI Secret Protection** - Your custom headers, proxies, decryption keys, and IVs are safely encrypted via Windows DPAPI in your `config.json` file. No plaintext secrets!
-- **Credential Privacy on Resume** - Resume job records intentionally store only the source hostname (never raw stream URLs or signed access tokens). A running Cloudflare-bypass download also replaces the parameters preview with a cookie-masked snapshot of its command; the live preview itself stays verbatim so **📋 Copy** remains copy-and-run.
-- **Thread-Safe Cancellation** - Responsive process cancellation with clean token lifetime management that safely terminates child process trees.
-- **In-Window Live Feedback & Progress** - Real-time progress bar, live status messages with color-coded alerts (green success, amber warnings/partials, red errors), collapsible diagnostic log, and an "Open Folder" button on completion.
-- **Accessible & Keyboard Ready** - High-contrast focus visual indicators, access keys (`Alt+G` for Go, `Alt+S` / `Escape` for Stop), and full UI automation properties.
-- **Automated Test Suite (1,336 Tests)** - Rock-solid stability backed by 1,336 unit, integration, parity, and accessibility tests across .NET (892 tests, 1 live-network test intentionally skipped), Node.js (361 tests), and Python (83 tests) test suites.
-
-### Download Options
-- **Concurrent Downloads** - Download multiple streams simultaneously.
-- **Audio/Subtitle Selection** - Download audio-only or subtitles-only easily.
-- **Stream Selection (Regex)** - Select or drop video/audio/subtitle streams by standard regex.
-- **Time Range** - Download specific portions of a stream (e.g., `00:05:00-00:10:00`).
-- **Speed Limit** - Set a maximum download speed to avoid throttling.
-- **Custom Proxy** - Support for HTTP and SOCKS5 proxies.
-
-### Muxing and Output
-- **Mux After Done** - Automatically mux video and audio to `.mp4` or `.mkv` with `ffmpeg`.
-- **Mux Import** - Import external media files during muxing.
-- **Subtitle Format** - Choose between SRT and VTT output formats.
-
-### Live Recording
-- **Perform as VOD** - Treat live streams as VOD, allowing full download and pausing.
-- **Realtime Merge** - Merge segments in real time without waiting for completion.
-- **Pipe Mux** - Direct pipe to muxer to save disk I/O.
-- **Record Limit** - Set a maximum recording duration.
-
-### Decryption
-- **Engine Selection** - Choose between MP4DECRYPT, SHAKA_PACKAGER, or FFMPEG for real-time MP4 segment decryption.
-- **HLS Method Override** - Set a custom HLS decryption method.
-- **Key Text File** - Load a massive list of decryption keys directly from a file.
-
-### Advanced Control
-- **Custom Headers** - Add HTTP headers (Cookie, User-Agent, Origin, etc.).
-- **Thread Control** - Customize thread count, retry limits, and timeout parameters.
-- **Auto Subtitle Fix** - Automatically fix subtitle synchronization issues. Like *Delete After Done*, it is on by default in N_m3u8DL-RE, and unticking it really turns it off.
-- **Save Pattern** - Custom naming pattern for downloaded files.
-- **Log Level** - Control output verbosity (OFF/ERROR/WARN/INFO/DEBUG).
-
-### Building a Release
-
-To build the release folder and zip, run `publish.bat` from the repository root (add `/nopause` when calling it from another script). It reads the version from `Directory.Build.props`, publishes the app as a self-contained single file, adds `N_m3u8DL-RE.exe`, `ffmpeg.exe`, `m3u8_cf_bypass.py` and the `extension/` folder (without its tests), checks the result, and writes `Publish\N_m3u8DL_RE_GUI_v<version>\` together with `N_m3u8DL_RE_GUI_v<version>.zip`. `N_m3u8DL-RE.exe`, `ffmpeg.exe` and `m3u8_cf_bypass.py` must sit in the repository root; if one is missing it stops before building anything. Everything is assembled in `Publish\.staging` and moved into place only after every check passes, so a failed run never leaves a half-built release.
-
-A complete release archive must contain: `N_m3u8DL_RE_GUI.exe`, `N_m3u8DL-RE.exe`, `ffmpeg.exe`, `m3u8_cf_bypass.py`, and the `extension/` folder. The version is `AppVersion` in `Directory.Build.props`, the only place it is typed; `publish.bat` checks that the built exe reports the same number, so the folder name, the zip name and the binary cannot drift apart.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="#readme-top">返回顶部</a>)</p>
 
 ---
 
-<!-- ROADMAP -->
+<!-- 功能 -->
 
-## Roadmap
+## 功能详解
 
-- [x] Full N_m3u8DL-RE argument support
-- [x] Batch download from text files
-- [x] Multi-Language UI (English, 简体中文, 繁體中文) with live dynamic hot-switching
-- [x] Dark theme with a Zone D status strip and a collapsible log panel
-- [x] Stream selection with regex
-- [x] Safe config parser and Windows DPAPI secret protection
-- [x] GUI Auto-Update checking system
-- [x] Download progress and live status visualization
-- [x] Keyboard shortcuts, visible focus rings, and screen-reader names on every control
-- [x] Full WCAG 2.1 AA contrast compliance and option-conflict dependency visibility
-- [ ] Collapsible option groups and task-oriented grouping
-- [ ] Queue management
+### 核心功能
+- **通用流抓取** - 通过 Native Messaging 一键 **⬇ Download**、直接粘贴浏览器的 cURL 命令、拖入 `.har` 抓包（自动对流排序并供你选择），或使用 **N-RE Stream Bridge** 浏览器扩展。每次抓取都从干净状态开始：解密密钥、Cloudflare 绕过和 TLS 指纹会被重置，不会沿用上一个流的设置；你自己的代理设置则会保留。
+- **断点续传** - 自动生成确定的临时目录（`<saveDir>/.nre-tmp/<saveName>`）并保存当前任务的元数据。启动时会检测留有分片的未完成下载，可一键换上新链接继续，也可以干净地丢弃。
+- **原生 Abyss / Hydrax 下载器** - 内置零依赖的 C# 加密引擎，可对 `abysscdn.com`、`playhydrax.com`、`zplayer.io` 和 `short.ink` 的分片进行解密并重新组装。会校验磁盘上的分片大小，并从精确的字节偏移处恢复已停止或中断的下载，而不是重新开始；取消状态如实报告，实时进度准确。视频提供多种画质时会打开画质选择窗口（体积最大的排在最前）。
+- **强化的 Cloudflare WAF 绕过** - 多线程并发分片下载器（`curl_cffi`，每线程独立会话）、浏览器 TLS 指纹模拟、自动代理探测（环境变量 / 系统代理 / Clash）、断点续传与原子写入、UTF-8 输出修复，以及 `ffmpeg` 合并输出 `.mp4`。
+- **三区现代化 UX/UI 架构** - 布局清晰：顶部为 URL 主栏，侧边为 6 个标签页（`📦 Download`、`🌐 Network`、`🔒 Security`、`🎬 Media`、`📡 Live`、`⚙️ Advanced`），底部为固定的命令预览栏。
+- **GUI 自动更新引擎** - 不受速率限制的 HTTP 更新检查。发布新版本后，顶部会出现绿色胶囊徽章（`🎉 vX.X.X Available!`）。
+- **简体中文界面** - 本衍生版界面为全简体中文（汉化）。另有「下载器语言」下拉框，用于控制 **N_m3u8DL-RE 控制台输出** 的语言（映射为 `--ui-language`），不影响 GUI 界面本身。
+- **完整支持 RE** - 兼容 N_m3u8DL-RE 的所有主要命令行参数。
+- **批量下载** - 从文本文件批量处理多个 URL，或直接拖入整个流文件夹。
+- **配置持久化** - 设置会在会话之间自动保存。
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### 安全与稳定性
+- **Windows DPAPI 机密保护** - 你的自定义请求头、代理、解密密钥和 IV 会通过 Windows DPAPI 安全地加密保存在 `config.json` 中。不存在明文机密！
+- **续传时的凭据隐私** - 续传任务记录有意只保存来源主机名（绝不保存原始流 URL 或带签名的访问令牌）。
+- **线程安全的取消** - 响应迅速的进程取消，令牌生命周期管理清晰，能安全地终止子进程树。
+- **窗口内实时反馈与进度** - 实时进度条、带颜色提示的状态消息（绿色成功、琥珀色警告/部分完成、红色错误）、可折叠的诊断日志，以及完成后的“打开文件夹”按钮。
+- **无障碍与键盘友好** - 高对比度的焦点指示、快捷键（`Alt+G` 开始，`Alt+S` / `Escape` 停止），以及完整的 UI 自动化属性。
+- **自动化测试套件（1,336 个测试）** - 由 1,336 个单元、集成、一致性和无障碍测试保障稳定性，覆盖 .NET（892 个测试，另有 1 个联网实测被有意跳过）、Node.js（361 个测试）和 Python（83 个测试）三套测试。
+
+### 下载选项
+- **并发下载** - 同时下载多个流。
+- **音频/字幕选择** - 轻松只下载音频或只下载字幕。
+- **流选择（正则）** - 用标准正则选择或丢弃视频/音频/字幕流。
+- **时间范围** - 只下载流中的某一段（例如 `00:05:00-00:10:00`）。
+- **限速** - 设置最大下载速度以避免被限流。
+- **自定义代理** - 支持 HTTP 和 SOCKS5 代理。
+
+### 合并与输出
+- **下载后合并** - 使用 `ffmpeg` 自动把视频和音频合并为 `.mp4` 或 `.mkv`。
+- **合并时导入** - 合并时导入外部媒体文件。
+- **字幕格式** - 可选 SRT 或 VTT 输出格式。
+
+### 直播录制
+- **按 VOD 处理** - 把直播流当作 VOD 处理，可完整下载并暂停。
+- **实时合并** - 无需等待结束，实时合并分片。
+- **管道合并** - 直接管道传给合并器，节省磁盘 I/O。
+- **录制时长限制** - 设置最长录制时长。
+
+### 解密
+- **引擎选择** - 可在 MP4DECRYPT、SHAKA_PACKAGER 或 FFMPEG 之间选择，用于实时 MP4 分片解密。
+- **HLS 方法覆盖** - 设置自定义的 HLS 解密方法。
+- **密钥文本文件** - 直接从文件中加载海量解密密钥。
+
+### 高级控制
+- **自定义请求头** - 添加 HTTP 请求头（Cookie、User-Agent、Origin 等）。
+- **线程控制** - 自定义线程数、重试次数和超时参数。
+- **自动字幕修复** - 自动修复字幕同步问题。与 *下载后删除临时文件* 一样，它在 N_m3u8DL-RE 中默认开启，取消勾选现在会真正把它关闭。
+- **保存命名模式** - 为下载的文件自定义命名模式。
+- **日志级别** - 控制输出详细程度（OFF/ERROR/WARN/INFO/DEBUG）。
+
+### 界面字体
+
+- **可选择 / 导入字体** - 界面字体可在顶部工具栏的「字体」下拉框中切换为任意系统已安装字体；点击「导入」可加载本地 `.ttf` / `.otf` / `.ttc` 字体文件并立即应用，选择结果保存到配置，重启后自动恢复。
+- **推荐字体：京華老宋体-GJ** - 发布包默认内置开源古籍宋体 **京華老宋体-GJ**，呈现典雅的宋体古籍字形，适合长时间中文界面阅读。该字体为开源项目，可自由分发；但字体文件体积较大，不纳入 git 版本库。若你从源码自行构建并希望内置该字体，请将其放到 `N_m3u8DL_RE_GUI/Fonts/KingHwaOldSong-GJ.ttf` 后再构建（缺失时构建照常进行，界面回退到系统默认字体，你仍可用「导入」功能临时加载）。
+
+### 构建发布包
+
+要生成发布文件夹和 zip，请在仓库根目录运行 `publish.bat`（从其他脚本调用时加上 `/nopause`）。它会从 `Directory.Build.props` 读取版本号，把应用发布为自包含的单文件，加入 `N_m3u8DL-RE.exe`、`ffmpeg.exe`、`m3u8_cf_bypass.py` 和 `extension/` 文件夹（不含其测试），检查结果，然后生成 `Publish\N_m3u8DL_RE_GUI_v<版本号>\` 以及对应的 `N_m3u8DL_RE_GUI_v<版本号>.zip`。`N_m3u8DL-RE.exe`、`ffmpeg.exe` 和 `m3u8_cf_bypass.py` 必须放在仓库根目录；缺少任何一个，脚本会在开始构建之前就停止。所有内容先在 `Publish\.staging` 中组装，全部检查通过后才移入正式位置，因此失败的运行绝不会留下构建到一半的发布包。
+
+完整的发布压缩包必须包含：`N_m3u8DL_RE_GUI.exe`、`N_m3u8DL-RE.exe`、`ffmpeg.exe`、`m3u8_cf_bypass.py` 和 `extension/` 文件夹。版本号就是 `Directory.Build.props` 中的 `AppVersion`，也是唯一需要手写版本号的地方；`publish.bat` 会检查构建出的 exe 报告的版本与之相同，因此文件夹名、zip 名和二进制文件不会出现版本不一致。
+
+<p align="right">(<a href="#readme-top">返回顶部</a>)</p>
 
 ---
 
-<!-- LICENSE & DISCLAIMER -->
+<!-- 路线图 -->
 
-## Disclaimer
+## 路线图
 
-This application is a **GUI wrapper only**. All downloading and processing is handled by [N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE) and [FFmpeg](https://ffmpeg.org/). For issues related to downloading or media processing failures, please refer to their respective repositories.
+- [x] 完整支持 N_m3u8DL-RE 参数
+- [x] 从文本文件批量下载
+- [x] 简体中文界面（汉化）
+- [x] 深色主题，带 Zone D 状态条和可折叠日志面板
+- [x] 用正则选择流
+- [x] 安全的配置解析器与 Windows DPAPI 机密保护
+- [x] GUI 自动更新检查系统
+- [x] 下载进度与实时状态可视化
+- [x] 键盘快捷键、可见的焦点框，以及每个控件的屏幕阅读器名称
+- [x] 完全符合 WCAG 2.1 AA 对比度，并显式提示选项冲突依赖
+- [ ] 可折叠的选项分组与面向任务的分组
+- [ ] 队列管理
 
-## License
+<p align="right">(<a href="#readme-top">返回顶部</a>)</p>
 
-Distributed under the MIT License. See `LICENSE` for more information.
+---
 
-<!-- MARKDOWN LINKS & IMAGES -->
+<!-- 许可证与免责声明 -->
+
+## 免责声明
+
+本应用**仅是图形界面封装**。所有下载和处理工作都由 [N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE) 和 [FFmpeg](https://ffmpeg.org/) 完成。如遇下载或媒体处理失败的问题，请前往它们各自的仓库反馈。
+
+## 许可证
+
+基于 MIT 许可证发布。详见 `LICENSE`。
+
+<!-- MARKDOWN 链接与图片 -->
 [version-shield]: https://img.shields.io/badge/version-2.1.6-blue?style=for-the-badge
 [version-url]: CHANGELOG.md
 [dotnet-shield]: https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white
