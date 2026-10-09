@@ -321,6 +321,19 @@ B 站无需任何界面设置，直接把链接粘到顶部 URL 栏即可自动�
 
 本应用**仅是图形界面封装**。所有下载和处理工作都由 [N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE) 和 [FFmpeg](https://ffmpeg.org/) 完成。如遇下载或媒体处理失败的问题，请前往它们各自的仓库反馈。
 
+## 第三方组件与来源
+
+发布包内置以下开源组件，均由其各自上游项目维护，本仓库仅按原样分发、未修改其二进制。来源链接如下，便于核验其出处与许可：
+
+| 组件 | 用途 | 上游来源 | 许可证 |
+| --- | --- | --- | --- |
+| N_m3u8DL-RE | 流媒体下载核心 | <https://github.com/nilaoda/N_m3u8DL-RE> | MIT |
+| FFmpeg | 转码 / 混流 / 合并 / 探测 | <https://ffmpeg.org/> | LGPL / GPL |
+| yt-dlp | B 站等站点下载（本仓库新增内置） | <https://github.com/yt-dlp/yt-dlp> | Unlicense（公有领域） |
+| curl_cffi | CF 绕过 TLS 指纹（Python 依赖，需自行 `pip install curl_cffi`） | <https://github.com/yifeikong/curl_cffi> | MIT |
+
+> 上述二进制均取自各自项目的官方发布，建议从上游仓库或官方发布页下载核验（比对版本号与哈希）。本仓库不修改、不重新签名这些组件。
+
 ## 许可证
 
 基于 MIT 许可证发布。详见 `LICENSE`。

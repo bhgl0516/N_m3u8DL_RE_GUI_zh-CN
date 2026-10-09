@@ -320,6 +320,19 @@ A complete release archive must contain: `N_m3u8DL_RE_GUI.exe`, `N_m3u8DL-RE.exe
 
 This application is a **GUI wrapper only**. All downloading and processing is handled by [N_m3u8DL-RE](https://github.com/nilaoda/N_m3u8DL-RE) and [FFmpeg](https://ffmpeg.org/). For issues related to downloading or media processing failures, please refer to their respective repositories.
 
+## Third-Party Components & Sources
+
+The release bundle contains the following open-source components, each maintained by its own upstream project. This repository redistributes them as-is and does not modify their binaries. Source links are provided for provenance and license verification:
+
+| Component | Purpose | Upstream Source | License |
+| --- | --- | --- | --- |
+| N_m3u8DL-RE | Core stream downloader | <https://github.com/nilaoda/N_m3u8DL-RE> | MIT |
+| FFmpeg | Transcoding / muxing / merging / probing | <https://ffmpeg.org/> | LGPL / GPL |
+| yt-dlp | Bilibili and other site downloads (bundled by this fork) | <https://github.com/yt-dlp/yt-dlp> | Unlicense (public domain) |
+| curl_cffi | Cloudflare TLS fingerprinting (Python dependency; install via `pip install curl_cffi`) | <https://github.com/yifeikong/curl_cffi> | MIT |
+
+> All binaries are taken from the respective projects' official releases. Verify them against the upstream repositories or official release pages (compare version and hash). This repository does not modify or re-sign these components.
+
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
