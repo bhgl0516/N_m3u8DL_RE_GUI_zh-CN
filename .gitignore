@@ -287,4 +287,10 @@ test.txt
 /.impeccable
 
 # Generated from Directory.Build.props on every build — never hand-edit.
-/extension/suite-version.json
+/extension/suite-version.json
+
+# Localization/derivative-work scratch backups (original files kept as *.bak)
+*.bak
+
+# Optional embedded serif font (open-source, distributed via Release only — ~30 MB)
+/N_m3u8DL_RE_GUI/Fonts/*.ttf

@@ -15,7 +15,9 @@ public sealed record CfCommandOptions(
     string Referer,
     string Cookie,
     string Impersonate,
-    bool KeepSegments);
+    bool KeepSegments,
+    int Threads,
+    string Proxy);
 
 /// <summary>
 /// Builds the Cloudflare-bypass command line and its .bat wrapper.
@@ -37,6 +39,12 @@ public static class CfCommandBuilder
 
         if (!string.IsNullOrEmpty(o.Cookie))
             sb.Append($" --cookie \"{Escape(o.Cookie)}\"");
+
+        if (o.Threads > 0)
+            sb.Append($" --threads {o.Threads}");
+
+        if (!string.IsNullOrEmpty(o.Proxy))
+            sb.Append($" --proxy \"{Escape(o.Proxy)}\"");
 
         if (o.KeepSegments)
             sb.Append(" --keep-segs");

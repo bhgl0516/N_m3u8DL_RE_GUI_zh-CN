@@ -49,27 +49,27 @@ public class DownloadService : IDownloadService
     {
         if (IsDownloading)
         {
-            logCallback?.Invoke("Download is already in progress. Please wait for it to complete.");
+            logCallback?.Invoke("下载已在进行中，请等待其完成。");
             return Task.FromResult(false);
         }
 
         if (string.IsNullOrWhiteSpace(options.Input))
         {
-            logCallback?.Invoke("Please enter a URL to download.");
+            logCallback?.Invoke("请先输入要下载的链接。");
             return Task.FromResult(false);
         }
 
         var exePath = string.IsNullOrWhiteSpace(options.ExePath) ? "N_m3u8DL-RE.exe" : options.ExePath;
         if (!System.IO.File.Exists(exePath))
         {
-            logCallback?.Invoke($"File not found: {exePath}");
-            logCallback?.Invoke("Please download N_m3u8DL-RE.exe from: https://github.com/nilaoda/N_m3u8DL-RE/releases");
+            logCallback?.Invoke($"未找到文件：{exePath}");
+            logCallback?.Invoke("请从以下地址下载 N_m3u8DL-RE.exe：https://github.com/nilaoda/N_m3u8DL-RE/releases");
             return Task.FromResult(false);
         }
 
-        logCallback?.Invoke("Starting download...");
+        logCallback?.Invoke("开始下载…");
         var args = ArgsBuilder.Build(options);
-        logCallback?.Invoke($"Command: {exePath} {args}");
+        logCallback?.Invoke($"命令：{exePath} {args}");
 
         var startInfo = new ProcessStartInfo
         {
@@ -95,13 +95,13 @@ public class DownloadService : IDownloadService
     {
         if (IsDownloading)
         {
-            logCallback?.Invoke("A process is already in progress. Please wait for it to complete.");
+            logCallback?.Invoke("已有进程正在运行，请等待其完成。");
             return Task.FromResult(false);
         }
 
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            logCallback?.Invoke("Process target file path is required.");
+            logCallback?.Invoke("必须指定进程目标文件路径。");
             return Task.FromResult(false);
         }
 
@@ -134,7 +134,7 @@ public class DownloadService : IDownloadService
         {
             if (SafeIsRunning(_currentProcess))
             {
-                logCallback?.Invoke("A process is already in progress. Please wait for it to complete.");
+                logCallback?.Invoke("已有进程正在运行，请等待其完成。");
                 return false;
             }
 
@@ -155,7 +155,7 @@ public class DownloadService : IDownloadService
 
             if (!process.Start())
             {
-                logCallback?.Invoke($"Failed to start process: {startInfo.FileName}");
+                logCallback?.Invoke($"启动进程失败：{startInfo.FileName}");
                 return false;
             }
 
@@ -171,14 +171,14 @@ public class DownloadService : IDownloadService
             }
             catch (OperationCanceledException)
             {
-                logCallback?.Invoke("Process execution was cancelled.");
+                logCallback?.Invoke("进程执行已取消。");
                 return false;
             }
 
             var success = process.ExitCode == 0;
             logCallback?.Invoke(success
-                ? "Process finished successfully!"
-                : $"Process exited with code: {process.ExitCode}");
+                ? "进程成功完成！"
+                : $"进程退出，代码：{process.ExitCode}");
 
             if (success)
                 progressCallback?.Report(100);
@@ -187,12 +187,12 @@ public class DownloadService : IDownloadService
         }
         catch (OperationCanceledException)
         {
-            logCallback?.Invoke("Process execution was cancelled.");
+            logCallback?.Invoke("进程执行已取消。");
             return false;
         }
         catch (Exception ex)
         {
-            logCallback?.Invoke($"Process execution error: {ex.Message}");
+            logCallback?.Invoke($"进程执行错误：{ex.Message}");
             return false;
         }
         finally

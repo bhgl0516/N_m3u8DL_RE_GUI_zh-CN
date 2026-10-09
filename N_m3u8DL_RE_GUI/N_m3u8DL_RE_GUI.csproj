@@ -16,17 +16,30 @@
   <ItemGroup>
     <None Include="App.config" Condition="Exists('App.config')" />
     <Resource Include="logo_3Iv_icon.ico" />
+    <Resource Include="Fonts\KingHwaOldSong-GJ.ttf" Condition="Exists('Fonts\KingHwaOldSong-GJ.ttf')" />
     <None Include="..\N_m3u8DL-RE.exe" Condition="Exists('..\N_m3u8DL-RE.exe')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <Link>N_m3u8DL-RE.exe</Link>
     </None>
     <None Include="..\ffmpeg.exe" Condition="Exists('..\ffmpeg.exe')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <Link>ffmpeg.exe</Link>
     </None>
     <None Include="..\m3u8_cf_bypass.py" Condition="Exists('..\m3u8_cf_bypass.py')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <Link>m3u8_cf_bypass.py</Link>
+    </None>
+    <None Include="..\yt-dlp.exe" Condition="Exists('..\yt-dlp.exe')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <Link>yt-dlp.exe</Link>
     </None>
   </ItemGroup>
 

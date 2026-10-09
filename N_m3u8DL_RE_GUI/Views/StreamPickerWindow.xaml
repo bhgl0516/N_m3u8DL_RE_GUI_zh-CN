@@ -1,11 +1,13 @@
 <Window x:Class="N_m3u8DL_RE_GUI.Views.StreamPickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Choose a stream"
+        Title="选择视频流"
         Height="360" Width="720"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
-        Background="#1C1C22">
+        Background="#1C1C22"
+        FontFamily="Microsoft YaHei UI"
+        FontSize="15">
     <Window.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="#5865F2"/>
         <SolidColorBrush x:Key="AccentTextBrush" Color="#7A87FF"/>
@@ -22,7 +24,7 @@
             <Setter Property="Padding" Value="16,6"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="15"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource AccentHoverBrush}"/>
@@ -56,14 +58,14 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0"
-                   Text="This capture contains more than one stream. Pick the one to download — the first is usually the master playlist."
+                   Text="此捕获包含多个视频流。请选择要下载的一个 — 第一个通常是主播放列表。"
                    TextWrapping="Wrap"
                    Foreground="{StaticResource TextPrimaryBrush}"
                    Margin="0,0,0,12"/>
 
         <ListBox Grid.Row="1"
                  x:Name="List_Candidates"
-                 AutomationProperties.Name="Stream candidates found in the capture"
+                 AutomationProperties.Name="捕获中发现的视频流候选"
                  MouseDoubleClick="List_Candidates_MouseDoubleClick"
                  Background="#141418"
                  BorderBrush="{StaticResource BorderBrushCustom}"
@@ -82,11 +84,11 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button x:Name="Button_Cancel" Content="Cancel" IsCancel="True"
-                    AutomationProperties.Name="Cancel stream selection"
+            <Button x:Name="Button_Cancel" Content="取消" IsCancel="True"
+                    AutomationProperties.Name="取消视频流选择"
                     Style="{StaticResource SecondaryButtonStyle}" MinWidth="90"/>
-            <Button x:Name="Button_Use" Content="Use this stream" IsDefault="True"
-                    AutomationProperties.Name="Use the selected stream"
+            <Button x:Name="Button_Use" Content="使用此视频流" IsDefault="True"
+                    AutomationProperties.Name="使用选中的视频流"
                     Click="Button_Use_Click"
                     Style="{StaticResource PrimaryButtonStyle}" MinWidth="130" Margin="8,0,0,0"/>
         </StackPanel>

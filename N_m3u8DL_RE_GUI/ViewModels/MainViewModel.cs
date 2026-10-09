@@ -68,7 +68,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(DownloadOptions.Input))
         {
-            MessageBox.Show("Please enter a URL to download", "Error", 
+            MessageBox.Show("请先输入要下载的链接", "错误", 
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -80,7 +80,7 @@ public partial class MainViewModel : ObservableObject
             lock (_logLock)
             {
                 _logBuilder.Clear();
-                _logBuilder.AppendLine("Starting download...");
+                _logBuilder.AppendLine("开始下载…");
             }
             LogOutput = "Starting download...\n";
 
@@ -115,15 +115,15 @@ public partial class MainViewModel : ObservableObject
 
             if (!success)
             {
-                MessageBox.Show("Download failed", "Error", 
+                MessageBox.Show("下载失败", "错误", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            lock (_logLock) { _logBuilder.AppendLine($"Error: {ex.Message}"); }
+            lock (_logLock) { _logBuilder.AppendLine($"错误：{ex.Message}"); }
             UpdateLogOutput(_logBuilder.ToString());
-            MessageBox.Show($"Error: {ex.Message}", "Error",  
+            MessageBox.Show($"错误：{ex.Message}", "错误",  
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
@@ -140,7 +140,7 @@ public partial class MainViewModel : ObservableObject
     {
         _downloadService.StopDownload();
         IsDownloading = false;
-        lock (_logLock) { _logBuilder.AppendLine("Download stopped."); }
+        lock (_logLock) { _logBuilder.AppendLine("下载已停止。"); }
         UpdateLogOutput(_logBuilder.ToString());
     }
 
@@ -184,7 +184,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            lock (_logLock) { _logBuilder.AppendLine($"Failed to get title from URL: {ex.Message}"); }
+            lock (_logLock) { _logBuilder.AppendLine($"从链接获取标题失败：{ex.Message}"); }
             UpdateLogOutput(_logBuilder.ToString());
         }
     }
@@ -208,7 +208,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SelectWorkingDirectory()
     {
-        var selectedPath = _utilityService.SelectFolder("Select download folder", WorkingDirectory);
+        var selectedPath = _utilityService.SelectFolder("选择下载文件夹", WorkingDirectory);
         if (!string.IsNullOrWhiteSpace(selectedPath))
         {
             WorkingDirectory = selectedPath;

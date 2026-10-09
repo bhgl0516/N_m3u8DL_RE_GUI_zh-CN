@@ -106,11 +106,11 @@ namespace N_m3u8DL_RE_GUI
 
         /// <summary>Alt+S / Enter — routed to Button_GO_Click, the real download path.</summary>
         public static readonly RoutedUICommand StartDownloadRoutedCommand =
-            new("Start Download", nameof(StartDownloadRoutedCommand), typeof(MainWindow));
+            new("开始下载", nameof(StartDownloadRoutedCommand), typeof(MainWindow));
 
         /// <summary>Escape — routed to Button_Stop_Click.</summary>
         public static readonly RoutedUICommand StopDownloadRoutedCommand =
-            new("Stop Download", nameof(StopDownloadRoutedCommand), typeof(MainWindow));
+            new("停止下载", nameof(StopDownloadRoutedCommand), typeof(MainWindow));
 
         private static Media.SolidColorBrush CreateFrozenBrush(MediaColor color)
         {
@@ -157,7 +157,7 @@ namespace N_m3u8DL_RE_GUI
 
         private void Button_SelectDir_Click(object sender, RoutedEventArgs e)
         {
-            var selectedPath = _utilityService.SelectFolder("Choose a folder — downloads will be saved here");
+            var selectedPath = _utilityService.SelectFolder("选择一个文件夹 — 下载将保存到此处");
             if (!string.IsNullOrEmpty(selectedPath))
             {
                 TextBox_WorkDir.Text = selectedPath;
@@ -468,15 +468,15 @@ namespace N_m3u8DL_RE_GUI
             {
                 TextBox_SelectAudio.IsEnabled = !audioOnly;
                 TextBox_SelectAudio.ToolTip = audioOnly
-                    ? "Overridden by Audio Only, which forces the best audio track."
-                    : "Regex selecting which audio track to download";
+                    ? "会被“仅音频”覆盖，强制使用最佳音轨。"
+                    : "选择要下载的音轨的正则";
             }
             if (TextBox_DropVideo != null)
             {
                 TextBox_DropVideo.IsEnabled = !audioOnly;
                 TextBox_DropVideo.ToolTip = audioOnly
-                    ? "Overridden by Audio Only, which drops every video track."
-                    : "Regex selecting which video tracks to discard";
+                    ? "会被“仅音频”覆盖，丢弃所有视频轨。"
+                    : "选择要丢弃的视频轨的正则";
             }
 
             var bypassCf = CheckBox_BypassCF?.IsChecked == true;
@@ -660,8 +660,8 @@ namespace N_m3u8DL_RE_GUI
 
             if (candidates.Count == 0)
             {
-                SetStatus("No stream was found in that capture. Clear the network log, press play, " +
-                          "let it run a few seconds, then save the HAR again.", isError: true);
+                SetStatus("未在该捕获中找到视频流。清空网络日志，点击播放，" +
+                          "让它运行几秒，然后重新保存 HAR。", isError: true);
                 return;
             }
 
@@ -671,7 +671,7 @@ namespace N_m3u8DL_RE_GUI
                 return;
             }
 
-            var picker = new Views.StreamPickerWindow(candidates) { Owner = this };
+            var picker = new Views.StreamPickerWindow(candidates) { Owner = this, FontFamily = this.FontFamily };
             if (picker.ShowDialog() == true)
                 TryApplyCapturedRequest(picker.Selected);
         }
@@ -712,6 +712,7 @@ namespace N_m3u8DL_RE_GUI
                 SetCurrentDirectoryToAppBase();
                 var config = _configService.Load("config.txt");
                 Services.MainWindowConfigMapper.Restore(this, config);
+                InitializeFontFeature(config.GetDecodedBase64("UIFont"));
 
                 if (!File.Exists(TextBox_EXE.Text))
                 {
@@ -766,6 +767,122 @@ namespace N_m3u8DL_RE_GUI
             }
         }
 
+        // --- UI font selection / import ---
+        // The window ships with an optional embedded classical serif
+        // ("京華老宋体-GJ") that is not committed to git. Users can pick any
+        // installed family or import their own .ttf/.otf/.ttc at runtime.
+        private const string EmbeddedFontResource = "pack://application:,,,/N_m3u8DL_RE_GUI;component/Fonts/KingHwaOldSong-GJ.ttf";
+        private const string EmbeddedFontUri = "pack://application:,,,/N_m3u8DL_RE_GUI;component/Fonts/KingHwaOldSong-GJ.ttf#KingHwaOldSong-GJ";
+        private const string DefaultFontSource = "Microsoft YaHei UI";
+        private bool _suspendFontApply;
+
+        private static bool EmbeddedFontAvailable()
+        {
+            try { return Application.GetResourceStream(new Uri(EmbeddedFontResource)) != null; }
+            catch { return false; }
+        }
+
+        private void InitializeFontFeature(string? savedFontSource)
+        {
+            _suspendFontApply = true;
+            try
+            {
+                Combo_UIFont.Items.Clear();
+                if (EmbeddedFontAvailable())
+                    Combo_UIFont.Items.Add(new ComboBoxItem { Content = "京華老宋体-GJ（内置）", Tag = EmbeddedFontUri });
+
+                foreach (var family in Media.Fonts.SystemFontFamilies
+                             .OrderBy(f => f.Source, StringComparer.CurrentCulture))
+                {
+                    Combo_UIFont.Items.Add(new ComboBoxItem { Content = family.Source, Tag = family.Source });
+                }
+            }
+            finally
+            {
+                _suspendFontApply = false;
+            }
+
+            var target = string.IsNullOrWhiteSpace(savedFontSource)
+                ? (EmbeddedFontAvailable() ? EmbeddedFontUri : DefaultFontSource)
+                : savedFontSource;
+            SelectComboFontSource(target);
+            ApplyFontSource(target);
+        }
+
+        private void SelectComboFontSource(string source)
+        {
+            _suspendFontApply = true;
+            try
+            {
+                var match = Combo_UIFont.Items.OfType<ComboBoxItem>()
+                    .FirstOrDefault(i => (i.Tag as string) == source);
+                if (match == null)
+                {
+                    match = new ComboBoxItem { Content = source, Tag = source };
+                    Combo_UIFont.Items.Add(match);
+                }
+                Combo_UIFont.SelectedItem = match;
+            }
+            finally
+            {
+                _suspendFontApply = false;
+            }
+        }
+
+        private void ApplyFontSource(string source)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                source = DefaultFontSource;
+            try
+            {
+                FontFamily = new Media.FontFamily(source);
+            }
+            catch
+            {
+                try { FontFamily = new Media.FontFamily(DefaultFontSource); }
+                catch { /* keep the inherited default */ }
+            }
+        }
+
+        private void Combo_UIFont_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_suspendFontApply)
+                return;
+            if (Combo_UIFont.SelectedItem is ComboBoxItem item && item.Tag is string source)
+                ApplyFontSource(source);
+        }
+
+        private void Button_ImportFont_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "选择字体文件",
+                Filter = "字体文件 (*.ttf;*.otf;*.ttc)|*.ttf;*.otf;*.ttc|所有文件 (*.*)|*.*"
+            };
+            if (dlg.ShowDialog(this) != true)
+                return;
+
+            try
+            {
+                var family = Media.Fonts.GetFontFamilies(new Uri(dlg.FileName)).FirstOrDefault();
+                if (family == null)
+                {
+                    MessageBox.Show(this, "未能从所选文件中读取到字体。", "导入字体",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var source = family.Source;
+                SelectComboFontSource(source);
+                ApplyFontSource(source);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"导入字体失败：{ex.Message}", "导入字体",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void CheckForResumableJob()
         {
             try
@@ -774,13 +891,13 @@ namespace N_m3u8DL_RE_GUI
                 if (job != null && job.ExistingBytes > 0)
                 {
                     _activeResumeJob = job;
-                    var title = string.IsNullOrWhiteSpace(job.SaveName) ? "Unfinished download" : $"Unfinished download — \"{job.SaveName}\"";
+                    var title = string.IsNullOrWhiteSpace(job.SaveName) ? "未完成的下载" : $"Unfinished download — \"{job.SaveName}\"";
                     TextBlock_ResumeTitle.Text = $"⏸  {title}";
 
                     var size = FormatByteSize(job.ExistingBytes);
                     var timeAgo = FormatTimeAgo(job.StartedAt);
-                    var host = string.IsNullOrWhiteSpace(job.SourceHost) ? string.Empty : $" · from {job.SourceHost}";
-                    TextBlock_ResumeDetail.Text = $"{size} already saved · stopped {timeAgo}{host}";
+                    var host = string.IsNullOrWhiteSpace(job.SourceHost) ? string.Empty : $" · 来自 {job.SourceHost}";
+                    TextBlock_ResumeDetail.Text = $"已保存 {size} · 停止于 {timeAgo}{host}";
 
                     Border_ResumeBanner.Visibility = Visibility.Visible;
                 }
@@ -837,7 +954,7 @@ namespace N_m3u8DL_RE_GUI
                 TextBox_URL.Focus();
 
                 Border_ResumeBanner.Visibility = Visibility.Collapsed;
-                SetStatus("Paste a fresh link for this video. The original link has expired — that is normal, and everything already downloaded will be kept.");
+                SetStatus("请为该视频粘贴新的链接。原链接已过期 — 这是正常的，已下载的内容都会保留。");
             }
         }
 
@@ -846,10 +963,10 @@ namespace N_m3u8DL_RE_GUI
             if (_activeResumeJob != null)
             {
                 var size = FormatByteSize(_activeResumeJob.ExistingBytes);
-                var targetName = string.IsNullOrWhiteSpace(_activeResumeJob.SaveName) ? "this download" : $"\"{_activeResumeJob.SaveName}\"";
-                var message = $"Delete {size} of partial download for {targetName}? This cannot be undone.";
+                var targetName = string.IsNullOrWhiteSpace(_activeResumeJob.SaveName) ? "此下载" : $"\"{_activeResumeJob.SaveName}\"";
+                var message = $"删除 {targetName} 的 {size} 部分下载？此操作无法撤销。";
 
-                var result = MessageBox.Show(message, "Discard Interrupted Download", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                var result = MessageBox.Show(message, "放弃中断的下载", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result == MessageBoxResult.Yes)
                 {
                     var success = Services.ResumeJobStore.Default.Discard();
@@ -857,13 +974,13 @@ namespace N_m3u8DL_RE_GUI
                     {
                         Border_ResumeBanner.Visibility = Visibility.Collapsed;
                         _activeResumeJob = null;
-                        SetStatus("Partial download discarded.");
+                        SetStatus("已放弃部分下载。");
                     }
                     else
                     {
                         MessageBox.Show(
-                            "Could not delete partial files. A file may still be in use by another process.",
-                            "Discard Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                            "无法删除部分文件。文件可能仍被其他进程占用。",
+                            "放弃失败", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -905,6 +1022,8 @@ namespace N_m3u8DL_RE_GUI
 
         private readonly System.Text.StringBuilder _logBuffer = new();
         private string? _lastOutputDirectory;
+        private DateTime _lastLogFlushUtc = DateTime.MinValue;
+        private const int MaxLogChars = 80000;
 
         private void Button_PasteCurl_Click(object sender, RoutedEventArgs e)
         {
@@ -916,7 +1035,7 @@ namespace N_m3u8DL_RE_GUI
             catch (Exception ex)
             {
                 // The clipboard is a shared OS resource; another process can hold it locked.
-                SetStatus($"Could not read the clipboard: {ex.Message}", isError: true);
+                SetStatus($"无法读取剪贴板：{ex.Message}", isError: true);
                 return;
             }
 
@@ -933,12 +1052,12 @@ namespace N_m3u8DL_RE_GUI
 
                 var batchFile = BatchPasteHelper.WriteTempBatchFile(clipboardText);
                 TextBox_URL.Text = batchFile;
-                SetStatus("Imported batch list — click GO to download.");
+                SetStatus("已导入批量列表 — 点击下载开始。");
                 return;
             }
 
-            SetStatus("Clipboard does not contain a cURL command or multi-stream batch list. " +
-                      "In your browser extension: click 'Copy as cURL' or 'Copy as list'.", isError: true);
+            SetStatus("剪贴板中不包含 cURL 命令或多流批量列表。" +
+                      "在浏览器扩展中：点击“复制为 cURL”或“复制为列表”。", isError: true);
         }
 
         private void TextBox_URL_Pasting(object sender, DataObjectPastingEventArgs e)
@@ -967,7 +1086,7 @@ namespace N_m3u8DL_RE_GUI
 
                 var batchFile = BatchPasteHelper.WriteTempBatchFile(pasted);
                 TextBox_URL.Text = batchFile;
-                SetStatus("Imported batch list — click GO to download.");
+                SetStatus("已导入批量列表 — 点击下载开始。");
                 e.CancelCommand();
             }
         }
@@ -996,7 +1115,7 @@ namespace N_m3u8DL_RE_GUI
                 : captured.Kind.ToString().ToUpperInvariant();
 
             var qualityMsg = captured.Directives.ContainsKey("select-video") ? $" (Quality: {captured.Directives["select-video"]})" : "";
-            SetStatus($"Imported {kind} — 1 URL, {captured.Headers.Count} header(s){qualityMsg}.");
+            SetStatus($"已导入 {kind} — 1 个 URL，{captured.Headers.Count} 个请求头{qualityMsg}。");
             return true;
         }
 
@@ -1012,6 +1131,20 @@ namespace N_m3u8DL_RE_GUI
         private void AppendLog(string message)
         {
             _logBuffer.AppendLine(message);
+            if (_logBuffer.Length > MaxLogChars)
+                _logBuffer.Remove(0, _logBuffer.Length - MaxLogChars);
+
+            var now = DateTime.UtcNow;
+            if ((now - _lastLogFlushUtc).TotalMilliseconds < 200)
+                return;
+            _lastLogFlushUtc = now;
+            FlushLog();
+        }
+
+        private void FlushLog()
+        {
+            if (TextBox_Log.Visibility != Visibility.Visible)
+                return;
             TextBox_Log.Text = _logBuffer.ToString();
             TextBox_Log.ScrollToEnd();
         }
@@ -1019,6 +1152,7 @@ namespace N_m3u8DL_RE_GUI
         private void ResetRunState()
         {
             _logBuffer.Clear();
+            _lastLogFlushUtc = DateTime.MinValue;
             TextBox_Log.Text = string.Empty;
             ProgressBar_Download.Value = 0;
             Button_OpenFolder.Visibility = Visibility.Collapsed;
@@ -1026,9 +1160,10 @@ namespace N_m3u8DL_RE_GUI
 
         private void ToggleButton_Log_Changed(object sender, RoutedEventArgs e)
         {
-            TextBox_Log.Visibility = ToggleButton_Log.IsChecked == true
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            bool show = ToggleButton_Log.IsChecked == true;
+            TextBox_Log.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            if (show)
+                FlushLog();
         }
 
         private void Button_OpenFolder_Click(object sender, RoutedEventArgs e)
@@ -1053,7 +1188,7 @@ namespace N_m3u8DL_RE_GUI
                     catch (Exception ex)
                     {
                         Debug.WriteLine($"Key conversion failed (invalid hex format): {ex.Message}");
-                        MessageBox.Show("Invalid Hex Key format. Please check your key.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("十六进制密钥格式无效，请检查密钥。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
                 }
@@ -1069,7 +1204,7 @@ namespace N_m3u8DL_RE_GUI
                         catch (Exception ex)
                         {
                             Debug.WriteLine($"Key conversion failed: {ex.Message}");
-                            MessageBox.Show("Invalid Hex Key format. Please check your key.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show("十六进制密钥格式无效，请检查密钥。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                             return;
                         }
                     }
@@ -1079,23 +1214,23 @@ namespace N_m3u8DL_RE_GUI
             if (CheckBox_BypassCF?.IsChecked != true && !File.Exists(TextBox_EXE.Text))
             {
                 MessageBox.Show(
-                    "N_m3u8DL-RE.exe was not found.\n\n" +
-                    "Set its path on the Download tab, or right-click the Executable field and choose Get Downloader.",
-                    "Downloader Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "未找到 N_m3u8DL-RE.exe。\n\n" +
+                    "请在“下载”页设置其路径，或右键点击可执行程序字段并选择“获取下载器”。",
+                    "未找到下载器", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (TextBox_URL.Text == "")
             {
                 MessageBox.Show(
-                    "Enter a URL or file path first.",
-                    "Missing Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "请先输入链接或文件路径。",
+                    "缺少输入", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (!InputValidation.IsValidProxy(TextBox_Proxy.Text))
             {
                 MessageBox.Show(
-                    "Proxy must start with http:// or socks5://.",
-                    "Invalid Proxy", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "代理必须以 http:// 或 socks5:// 开头。",
+                    "代理无效", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1107,6 +1242,23 @@ namespace N_m3u8DL_RE_GUI
                 try
                 {
                     await StartAbyssDownloadAsync(TextBox_URL.Text);
+                }
+                finally
+                {
+                    Button_GO.IsEnabled = true;
+                    Button_Stop.Visibility = Visibility.Collapsed;
+                }
+                return;
+            }
+
+            // Bilibili download mode (via bundled yt-dlp)
+            if (IsBilibiliInput(TextBox_URL.Text))
+            {
+                Button_GO.IsEnabled = false;
+                Button_Stop.Visibility = Visibility.Visible;
+                try
+                {
+                    await StartBilibiliDownloadAsync(TextBox_URL.Text);
                 }
                 finally
                 {
@@ -1142,7 +1294,7 @@ namespace N_m3u8DL_RE_GUI
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Batch build failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(ex.Message, "批量构建失败", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 finally
@@ -1160,7 +1312,7 @@ namespace N_m3u8DL_RE_GUI
                     _lastOutputDirectory = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text)
                                            ?? Environment.CurrentDirectory;
                     ResetRunState();
-                    SetStatus("Running batch…");
+                    SetStatus("正在运行批量下载…");
 
                     var batchProgress = new Progress<int>(p => ProgressBar_Download.Value = p);
                     var batchLog = new Action<string>(line => Dispatcher.InvokeAsync(() => AppendLog(line)));
@@ -1173,18 +1325,18 @@ namespace N_m3u8DL_RE_GUI
                         if (batchOk)
                         {
                             ProgressBar_Download.Value = 100;
-                            SetStatus($"Batch finished. Saved to {_lastOutputDirectory}");
+                            SetStatus($"批量下载完成。已保存到 {_lastOutputDirectory}");
                             Button_OpenFolder.Visibility = Visibility.Visible;
                         }
                         else
                         {
-                            SetStatus("Batch failed — open the Log for details.", isError: true);
+                            SetStatus("批量下载失败 — 请打开日志查看详情。", isError: true);
                             ToggleButton_Log.IsChecked = true;
                         }
                     }
                     catch (Exception ex)
                     {
-                        SetStatus($"Batch error: {ex.Message}", isError: true);
+                        SetStatus($"批量错误：{ex.Message}", isError: true);
                         ToggleButton_Log.IsChecked = true;
                     }
                     finally
@@ -1224,7 +1376,7 @@ namespace N_m3u8DL_RE_GUI
                             : options.SaveDir;
 
                         ResetRunState();
-                        SetStatus("Downloading…");
+                        SetStatus("正在下载…");
 
                         Services.ResumeJobStore.Default.Begin(
                             options.Input,
@@ -1242,19 +1394,19 @@ namespace N_m3u8DL_RE_GUI
                             Services.ResumeJobStore.Default.Complete();
                             _activeResumeJob = null;
                             ProgressBar_Download.Value = 100;
-                            SetStatus($"Saved to {_lastOutputDirectory}");
+                            SetStatus($"已保存到 {_lastOutputDirectory}");
                             Button_OpenFolder.Visibility = Visibility.Visible;
                         }
                         else
                         {
-                            SetStatus("Download failed — open the Log for details.", isError: true);
+                            SetStatus("下载失败 — 请打开日志查看详情。", isError: true);
                             ToggleButton_Log.IsChecked = true;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    SetStatus($"Download error: {ex.Message}", isError: true);
+                    SetStatus($"下载错误：{ex.Message}", isError: true);
                     ToggleButton_Log.IsChecked = true;
                 }
                 finally
@@ -1341,7 +1493,7 @@ namespace N_m3u8DL_RE_GUI
                                    ?? Environment.CurrentDirectory;
 
             ResetRunState();
-            SetStatus("Fetching Abyss/Hydrax video metadata…");
+            SetStatus("正在获取 Abyss/Hydrax 视频元数据…");
             AppendLog($"{DateTime.Now:HH:mm:ss.fff} INFO : Abyss/Hydrax video stream detected: {url}");
 
             try
@@ -1355,7 +1507,7 @@ namespace N_m3u8DL_RE_GUI
                 var mp4 = await AbyssMetadataFetcher.FetchMetadataAsync(url, customHeaders: customHeaders, cancellationToken: cts.Token);
                 if (mp4.Sources == null || mp4.Sources.Count == 0)
                 {
-                    throw new InvalidOperationException("No downloadable video streams found in Abyss metadata.");
+                    throw new InvalidOperationException("Abyss 元数据中未找到可下载的视频流。");
                 }
 
                 // Pick highest resolution/size available
@@ -1371,7 +1523,7 @@ namespace N_m3u8DL_RE_GUI
 
                 AppendLog($"{DateTime.Now:HH:mm:ss.fff} INFO : Video: {mp4.Slug} | Quality: {source.Label} | Size: {source.Size / (1024.0 * 1024.0):F1} MB | Codec: {source.Codec}");
                 AppendLog($"{DateTime.Now:HH:mm:ss.fff} INFO : Output file: {outputPath}");
-                SetStatus($"Downloading Abyss stream: {source.Label}…");
+                SetStatus($"正在下载 Abyss 流：{source.Label}…");
 
                 var abyssService = new AbyssDownloadService();
                 var progress = new Progress<AbyssDownloadProgress>(p =>
@@ -1379,7 +1531,7 @@ namespace N_m3u8DL_RE_GUI
                     Dispatcher.InvokeAsync(() =>
                     {
                         ProgressBar_Download.Value = (int)p.Percentage;
-                        SetStatus($"Downloading Abyss: {p}");
+                        SetStatus($"正在下载 Abyss：{p}");
                     });
                 });
 
@@ -1396,23 +1548,121 @@ namespace N_m3u8DL_RE_GUI
                     cancellationToken: cts.Token);
 
                 ProgressBar_Download.Value = 100;
-                SetStatus($"Saved to {outputPath}");
+                SetStatus($"已保存到 {outputPath}");
                 Button_OpenFolder.Visibility = Visibility.Visible;
             }
             catch (OperationCanceledException)
             {
-                SetStatus("Download stopped by user.");
+                SetStatus("下载已被用户停止。");
                 AppendLog($"{DateTime.Now:HH:mm:ss.fff} WARN : Download cancelled by user.");
             }
             catch (Exception ex)
             {
-                SetStatus($"Download error: {ex.Message}", isError: true);
+                SetStatus($"下载错误：{ex.Message}", isError: true);
                 AppendLog($"{DateTime.Now:HH:mm:ss.fff} ERROR : {ex.Message}");
                 ToggleButton_Log.IsChecked = true;
             }
             finally
             {
                 EndCancellableOperation(cts);
+            }
+        }
+
+        /// <summary>
+        /// True when the input points at Bilibili (URL, b23.tv short link, or a bare BV/av id).
+        /// </summary>
+        private static bool IsBilibiliInput(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return false;
+            var t = input.Trim();
+            if (t.StartsWith("BV", StringComparison.OrdinalIgnoreCase) && t.Length >= 10) return true;
+            if (t.StartsWith("av", StringComparison.OrdinalIgnoreCase) &&
+                t.Length > 2 && long.TryParse(t.Substring(2), out _)) return true;
+            return t.IndexOf("bilibili.com", StringComparison.OrdinalIgnoreCase) >= 0
+                || t.IndexOf("b23.tv", StringComparison.OrdinalIgnoreCase) >= 0
+                || t.IndexOf("b23.wtf", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string NormalizeBilibiliInput(string input)
+        {
+            var t = input.Trim();
+            if (t.StartsWith("BV", StringComparison.OrdinalIgnoreCase) && t.Length >= 10)
+                return $"https://www.bilibili.com/video/{t}";
+            if (t.StartsWith("av", StringComparison.OrdinalIgnoreCase) &&
+                t.Length > 2 && long.TryParse(t.Substring(2), out _))
+                return $"https://www.bilibili.com/video/{t}";
+            if (!t.Contains("://", StringComparison.Ordinal))
+                return "https://" + t;
+            return t;
+        }
+
+        /// <summary>
+        /// Download a Bilibili video with the bundled yt-dlp engine, which handles
+        /// the DASH audio/video streams, cookie/wbi signing, and ffmpeg muxing.
+        /// Cookies/headers are taken from the Network page "Headers" box.
+        /// </summary>
+        private async System.Threading.Tasks.Task StartBilibiliDownloadAsync(string url)
+        {
+            string ytDlp = Path.Combine(AppContext.BaseDirectory, "yt-dlp.exe");
+            if (!File.Exists(ytDlp))
+                ytDlp = Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe");
+            if (!File.Exists(ytDlp))
+            {
+                MessageBox.Show(
+                    "未找到 yt-dlp.exe。\n请将其放在与 GUI 可执行文件相同的目录中。",
+                    "哔哩哔哩下载", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var target = NormalizeBilibiliInput(url);
+            var saveDir = OptionValueNormalizer.NormalizeSaveDir(TextBox_WorkDir.Text)
+                          ?? Environment.CurrentDirectory;
+            try { Directory.CreateDirectory(saveDir); } catch { }
+            _lastOutputDirectory = saveDir;
+
+            var titleClean = _utilityService.GetValidFileName(TextBox_Title.Text);
+            string outTemplate = string.IsNullOrWhiteSpace(titleClean)
+                ? "%(title)s.%(ext)s"
+                : titleClean + ".%(ext)s";
+
+            var args = new System.Text.StringBuilder();
+            args.Append("-f \"bv*+ba/b\"");
+            args.Append(" --merge-output-format mp4");
+            args.Append($" --ffmpeg-location \"{Path.GetDirectoryName(ytDlp)}\"");
+            args.Append(" --no-playlist");
+            args.Append(" --newline");
+            args.Append(" --no-mtime");
+
+            int ytThreads = int.TryParse(TextBox_Max?.Text, out var ytT) && ytT > 0 ? ytT : 16;
+            if (ytThreads > 64) ytThreads = 64;
+            args.Append($" --concurrent-fragments {ytThreads}");
+
+            var headers = HeaderParser.Parse(TextBox_Headers?.Text);
+            foreach (var kv in headers)
+                args.Append($" --add-header \"{kv.Key}: {kv.Value}\"");
+
+            args.Append($" -o \"{Path.Combine(saveDir, outTemplate)}\"");
+            args.Append($" \"{target}\"");
+
+            ResetRunState();
+            SetStatus("正在下载 B 站视频…");
+            AppendLog($"{DateTime.Now:HH:mm:ss.fff} INFO : Bilibili stream detected: {target}");
+
+            var progress = new Progress<int>(p => ProgressBar_Download.Value = p);
+            var log = new Action<string>(line => Dispatcher.InvokeAsync(() => AppendLog(line)));
+
+            var ok = await _downloadService.StartProcessAsync(ytDlp, args.ToString(), log, progress);
+
+            if (ok)
+            {
+                ProgressBar_Download.Value = 100;
+                SetStatus($"已保存到 {saveDir}");
+                Button_OpenFolder.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                SetStatus("B 站下载失败 — 请打开日志查看详情。", isError: true);
+                ToggleButton_Log.IsChecked = true;
             }
         }
 
@@ -1431,21 +1681,25 @@ namespace N_m3u8DL_RE_GUI
             if (string.IsNullOrWhiteSpace(titleClean)) titleClean = "output";
             if (!titleClean.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)) titleClean += ".mp4";
 
+            var cfSaveDir = string.IsNullOrWhiteSpace(TextBox_WorkDir.Text)
+                ? Environment.CurrentDirectory
+                : TextBox_WorkDir.Text;
+
             return new CfCommandOptions(
                 PythonExe: pythonExe,
                 ScriptPath: scriptPath,
                 Url: TextBox_URL.Text,
                 OutputName: titleClean,
-                WorkDir: string.IsNullOrWhiteSpace(TextBox_WorkDir.Text)
-                    ? Environment.CurrentDirectory
-                    : TextBox_WorkDir.Text,
-                SegDir: Path.Combine(AppContext.BaseDirectory, "cf_segments"),
+                WorkDir: cfSaveDir,
+                SegDir: Path.Combine(cfSaveDir, "cf_segments"),
                 Referer: CfCommandBuilder.DeriveReferer(TextBox_CFReferer?.Text, TextBox_URL.Text),
                 Cookie: TextBox_CFCookie?.Text?.Trim() ?? string.Empty,
                 Impersonate: (Combo_CFImpersonate?.SelectedItem is ComboBoxItem cfi && cfi.Tag is string tag && !string.IsNullOrEmpty(tag))
                     ? tag
                     : "chrome",
-                KeepSegments: CheckBox_CFKeepSegs?.IsChecked == true);
+                KeepSegments: CheckBox_CFKeepSegs?.IsChecked == true,
+                Threads: int.TryParse(TextBox_Max?.Text, out var cfThreads) && cfThreads > 0 ? cfThreads : 16,
+                Proxy: TextBox_Proxy?.Text?.Trim() ?? string.Empty);
         }
 
         /// <summary>
@@ -1605,8 +1859,8 @@ namespace N_m3u8DL_RE_GUI
             if (!File.Exists(scriptPath))
             {
                 MessageBox.Show(
-                    "m3u8_cf_bypass.py not found.\nPlease place it in the same directory as the GUI executable.",
-                    "Bypass Cloudflare", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "未找到 m3u8_cf_bypass.py。\n请将其放在与 GUI 可执行文件相同的目录中。",
+                    "绕过 Cloudflare", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1628,12 +1882,12 @@ namespace N_m3u8DL_RE_GUI
             if (string.IsNullOrEmpty(pythonExe))
             {
                 MessageBox.Show(
-                    "No Python interpreter with curl_cffi found.\n\n" +
-                    "Install the dependency once (run in your terminal):\n" +
+                    "未找到带 curl_cffi 的 Python 解释器。\n\n" +
+                    "请先在终端中安装依赖（运行一次）：\n" +
                     "    pip install curl_cffi\n" +
-                    "or: python -m pip install curl_cffi\n\n" +
-                    "Then click Start Download again.",
-                    "Bypass Cloudflare", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "或：python -m pip install curl_cffi\n\n" +
+                    "然后再次点击开始下载。",
+                    "绕过 Cloudflare", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1647,7 +1901,7 @@ namespace N_m3u8DL_RE_GUI
                 ? Environment.CurrentDirectory
                 : TextBox_WorkDir.Text;
             ResetRunState();
-            SetStatus("Running Cloudflare bypass…");
+            SetStatus("正在运行 Cloudflare 绕过…");
 
             var cfProgress = new Progress<int>(p => ProgressBar_Download.Value = p);
             var cfLog = new Action<string>(line => Dispatcher.InvokeAsync(() => AppendLog(line)));
@@ -1657,12 +1911,12 @@ namespace N_m3u8DL_RE_GUI
             if (cfOk)
             {
                 ProgressBar_Download.Value = 100;
-                SetStatus($"Saved to {_lastOutputDirectory}");
+                SetStatus($"已保存到 {_lastOutputDirectory}");
                 Button_OpenFolder.Visibility = Visibility.Visible;
             }
             else
             {
-                SetStatus("Cloudflare bypass failed — open the Log for details.", isError: true);
+                SetStatus("Cloudflare 绕过失败 — 请打开日志查看详情。", isError: true);
                 ToggleButton_Log.IsChecked = true;
             }
         }
@@ -1735,8 +1989,8 @@ namespace N_m3u8DL_RE_GUI
                     TextBox_Key.Text = path;
                 else
                     MessageBox.Show(
-                        "That file is not a valid key file. A raw HLS key must be exactly 16 bytes.",
-                        "Invalid Key File", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        "该文件不是有效的密钥文件。原始 HLS 密钥必须正好为 16 字节。",
+                        "密钥文件无效", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1769,7 +2023,7 @@ namespace N_m3u8DL_RE_GUI
                     // No safe guess exists: too low nags about the installed version, too
                     // high hides every real update. Say nothing rather than mislead.
                     if (isManual && TextBlock_UpdateStatus != null)
-                        TextBlock_UpdateStatus.Text = "Could not determine this app's version.";
+                        TextBlock_UpdateStatus.Text = "无法确定本应用的版本。";
                     return;
                 }
 
@@ -1779,11 +2033,11 @@ namespace N_m3u8DL_RE_GUI
                 switch (result.Status)
                 {
                     case N_m3u8DL_RE_GUI.Core.Services.UpdateCheckStatus.UpdateAvailable:
-                        Button_UpdateBadge.Content = $"🎉 {result.LatestVersion} Available!";
+                        Button_UpdateBadge.Content = $"🎉 发现新版本 {result.LatestVersion}！";
                         Button_UpdateBadge.Tag = result.ReleaseUrl;
                         Button_UpdateBadge.Visibility = Visibility.Visible;
                         if (TextBlock_UpdateStatus != null)
-                            TextBlock_UpdateStatus.Text = $"{result.LatestVersion} available!";
+                            TextBlock_UpdateStatus.Text = $"有新版本 {result.LatestVersion} 可用！";
                         break;
 
                     case N_m3u8DL_RE_GUI.Core.Services.UpdateCheckStatus.UpToDate:
@@ -1792,7 +2046,7 @@ namespace N_m3u8DL_RE_GUI
                         {
                             if (isManual)
                             {
-                                TextBlock_UpdateStatus.Text = "✓ Latest version";
+                                TextBlock_UpdateStatus.Text = "✓ 已是最新版本";
                                 var timer = new System.Windows.Threading.DispatcherTimer
                                 {
                                     Interval = TimeSpan.FromSeconds(3)
@@ -1817,7 +2071,7 @@ namespace N_m3u8DL_RE_GUI
                         {
                             if (isManual)
                             {
-                                TextBlock_UpdateStatus.Text = "Could not check for updates — check your connection.";
+                                TextBlock_UpdateStatus.Text = "无法检查更新 — 请检查网络连接。";
                             }
                             else
                             {

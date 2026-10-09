@@ -30,9 +30,9 @@ namespace N_m3u8DL_RE_GUI
             Debug.WriteLine($"Unhandled UI exception: {e.Exception}");
 
             System.Windows.MessageBox.Show(
-                $"An unexpected error occurred:\n\n{e.Exception.Message}\n\n" +
-                "The application will keep running, but the last action did not complete.",
-                "Unexpected Error",
+                $"发生了意外错误：\n\n{e.Exception.Message}\n\n" +
+                "应用将继续运行，但上一步操作未能完成。",
+                "意外错误",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 

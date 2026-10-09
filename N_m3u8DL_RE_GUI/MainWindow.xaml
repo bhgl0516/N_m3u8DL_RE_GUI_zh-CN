@@ -13,7 +13,8 @@
         Closing="Window_Closing" 
         Loaded="Window_Loaded"
         Background="#0D0D0F"
-        FontFamily="Segoe UI"
+        FontFamily="Microsoft YaHei UI"
+        FontSize="15"
         TextOptions.TextFormattingMode="Display"
         DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}">
     
@@ -64,7 +65,7 @@
         <Style x:Key="LabelStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
         </Style>
         
@@ -119,7 +120,7 @@
             <Setter Property="Padding" Value="16,6"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
@@ -155,7 +156,7 @@
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Padding" Value="8,2"/>
             <Setter Property="FocusVisualStyle" Value="{StaticResource AccessibleFocusVisual}"/>
@@ -196,7 +197,7 @@
                                                   RecognizesAccessKey="True"
                                                   TextBlock.Foreground="{TemplateBinding Foreground}"
                                                   TextBlock.FontWeight="{TemplateBinding FontWeight}"
-                                                  TextBlock.FontSize="11"/>
+                                                  TextBlock.FontSize="13"/>
                             </Border>
                             <!-- Content area -->
                             <Border Grid.Row="1" Background="{StaticResource CardBrush}"
@@ -359,7 +360,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Padding" Value="14,10"/>
             <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -412,17 +413,28 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="N_m3u8DL-RE GUI" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentTextBrush}"/>
-                        <TextBlock x:Name="TextBlock_AppVersion" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Bottom" Margin="8,0,0,2"/>
-                        <Button x:Name="Button_UpdateBadge" AutomationProperties.Name="New Version Available" Visibility="Collapsed"
+                        <TextBlock Text="N_m3u8DL-RE GUI" FontSize="20" FontWeight="Bold" Foreground="{StaticResource AccentTextBrush}"/>
+                        <TextBlock x:Name="TextBlock_AppVersion" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Bottom" Margin="8,0,0,2"/>
+                        <Button x:Name="Button_UpdateBadge" AutomationProperties.Name="有可用新版本" Visibility="Collapsed"
                                 Style="{StaticResource UpdatePillButtonStyle}"
                                 Margin="10,0,0,0"
                                 Click="Button_UpdateBadge_Click"
-                                ToolTip="Click to view and download latest release on GitHub"/>
+                                ToolTip="点击查看并下载 GitHub 上的最新版本"/>
                     </StackPanel>
-                    <CheckBox Grid.Column="1" x:Name="CheckBox_TopMost" AutomationProperties.Name="Always on Top" Style="{StaticResource CheckBoxStyle}"
-                              Content="Always on Top" ToolTip="Keep window on top"
-                              Checked="SetTopMost" Unchecked="SetTopMost"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="字体" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox x:Name="Combo_UIFont" Width="150" VerticalAlignment="Center"
+                                  SelectionChanged="Combo_UIFont_SelectionChanged"
+                                  AutomationProperties.Name="界面字体"
+                                  ToolTip="选择界面显示字体。可点「导入」加载任意 .ttf/.otf/.ttc 字体。推荐古籍宋体「京華老宋体-GJ」。"/>
+                        <Button x:Name="Button_ImportFont" Content="导入" Style="{StaticResource SecondaryButtonStyle}"
+                                Click="Button_ImportFont_Click" Margin="6,0,12,0" Padding="8,2" FontSize="13"
+                                AutomationProperties.Name="导入字体文件"
+                                ToolTip="从本地选择 .ttf / .otf / .ttc 字体文件并应用"/>
+                        <CheckBox x:Name="CheckBox_TopMost" AutomationProperties.Name="窗口置顶" Style="{StaticResource CheckBoxStyle}"
+                                  Content="窗口置顶" ToolTip="保持窗口在最前面"
+                                  Checked="SetTopMost" Unchecked="SetTopMost"/>
+                    </StackPanel>
                 </Grid>
 
                 <!-- Resume Interrupted Download Banner -->
@@ -435,32 +447,32 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock x:Name="TextBlock_ResumeTitle" FontWeight="SemiBold" FontSize="12"
+                            <TextBlock x:Name="TextBlock_ResumeTitle" FontWeight="SemiBold" FontSize="14"
                                        Foreground="{StaticResource CfAmberBrush}"
-                                       AutomationProperties.Name="Interrupted Download Title"
-                                       Text="⏸  Unfinished download"/>
-                            <TextBlock x:Name="TextBlock_ResumeDetail" FontSize="11"
+                                       AutomationProperties.Name="未完成的下载"
+                                       Text="⏸  未完成的下载"/>
+                            <TextBlock x:Name="TextBlock_ResumeDetail" FontSize="13"
                                        Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"
-                                       AutomationProperties.Name="Interrupted Download Details"
-                                       Text="Partial download found on disk."/>
+                                       AutomationProperties.Name="未完成下载详情"
+                                       Text="检测到磁盘上有未下载完成的文件。"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                            <Button x:Name="Button_ResumeJob" Content="Resume"
+                            <Button x:Name="Button_ResumeJob" Content="继续下载"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     Background="#3D3017" Foreground="{StaticResource CfAmberBrush}"
                                     BorderBrush="{StaticResource CfAmberBrush}"
                                     Padding="10,4" Margin="0,0,6,0"
                                     Click="Button_ResumeJob_Click"
-                                    AutomationProperties.Name="Resume interrupted download"
-                                    ToolTip="Restore download settings and prepare to attach a fresh link"/>
-                            <Button x:Name="Button_DiscardJob" Content="Discard"
+                                    AutomationProperties.Name="继续未完成的下载"
+                                    ToolTip="恢复下载设置并准备重新附加链接"/>
+                            <Button x:Name="Button_DiscardJob" Content="放弃"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     Background="Transparent" Foreground="#EC7063"
                                     BorderBrush="#7A2D27"
                                     Padding="10,4"
                                     Click="Button_DiscardJob_Click"
-                                    AutomationProperties.Name="Discard interrupted download"
-                                    ToolTip="Delete partial files from disk and discard resume data"/>
+                                    AutomationProperties.Name="放弃未完成的下载"
+                                    ToolTip="删除磁盘上的部分文件并清除续传数据"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -472,39 +484,39 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Input URL" Style="{StaticResource LabelStyle}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="输入链接" Style="{StaticResource LabelStyle}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                     <TextBox Grid.Column="1" x:Name="TextBox_URL" Style="{StaticResource TextBoxStyle}" 
-                             FontSize="13" TextChanged="TextChanged" AllowDrop="True"
+                             FontSize="15" TextChanged="TextChanged" AllowDrop="True"
                              PreviewKeyDown="TextBox_URL_PreviewKeyDown"
                              MouseDoubleClick="TextBox_URL_MouseDoubleClick"
                              PreviewDragOver="TextBox_URL_PreviewDragOver"
                              PreviewDrop="TextBox_URL_PreviewDrop"
                              PreviewDragEnter="TextBox_URL_PreviewDragEnter"
-                             AutomationProperties.Name="Input URL or File Path"
-                             AutomationProperties.HelpText="M3U8/MPD URL or local file path"
-                             ToolTip="M3U8/MPD/ISM URL or local file path. Double-click to paste from clipboard"/>
+                             AutomationProperties.Name="输入链接或文件路径"
+                             AutomationProperties.HelpText="M3U8/MPD 链接或本地文件路径"
+                             ToolTip="M3U8/MPD/ISM 链接或本地文件路径。双击从剪贴板粘贴"/>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
                         <Button x:Name="Button_PasteCurl"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Content="📋 Paste from browser"
+                                Content="📋 从浏览器粘贴"
                                 Click="Button_PasteCurl_Click"
-                                AutomationProperties.Name="Paste stream URL and headers from a copied cURL command"
-                                ToolTip="In your browser press F12 → Network → right-click the stream request → Copy → Copy as cURL, then click here."
+                                AutomationProperties.Name="从复制的 cURL 命令粘贴流链接和请求头"
+                                ToolTip="在浏览器中按 F12 → 网络 → 右键点击流请求 → 复制 → 复制为 cURL，然后点击这里。"
                                 Margin="0,0,6,0"/>
-                        <Button x:Name="Button_GO" Content="▶ _GO" 
+                        <Button x:Name="Button_GO" Content="▶ 下载" 
                                 Style="{StaticResource ButtonStyle}"
                                 Click="Button_GO_Click"
-                                AutomationProperties.Name="Start Download"
-                                AutomationProperties.HelpText="Start downloading current stream"
-                                ToolTip="Start download (Alt+G, Alt+S, Enter)"/>
-                        <Button x:Name="Button_Stop" Content="⏹ S_top"
+                                AutomationProperties.Name="开始下载"
+                                AutomationProperties.HelpText="开始下载当前流"
+                                ToolTip="开始下载 (Alt+G、Alt+S、Enter)"/>
+                        <Button x:Name="Button_Stop" Content="⏹ 停止"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 Background="#C0392B" Foreground="#FFFFFF" BorderThickness="0"
                                 Click="Button_Stop_Click" Margin="6,0,0,0" Padding="12,6"
                                 Visibility="Collapsed"
-                                AutomationProperties.Name="Stop Download"
-                                AutomationProperties.HelpText="Cancel active download process"
-                                ToolTip="Cancel current download (Alt+T, Escape)"/>
+                                AutomationProperties.Name="停止下载"
+                                AutomationProperties.HelpText="取消当前下载进程"
+                                ToolTip="取消当前下载 (Alt+T、Esc)"/>
                     </StackPanel>
                 </Grid>
 
@@ -518,22 +530,22 @@
                         <ColumnDefinition Width="70"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Save Dir" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="保存目录" Style="{StaticResource LabelStyle}"/>
                     <TextBox Grid.Column="1" x:Name="TextBox_WorkDir" Style="{StaticResource TextBoxStyle}" 
                              TextChanged="TextChanged"
-                             AutomationProperties.Name="Save Directory Path"
-                             ToolTip="Output directory for downloads"/>
-                    <Button Grid.Column="2" Content="Browse" Style="{StaticResource SecondaryButtonStyle}"
+                             AutomationProperties.Name="保存目录路径"
+                             ToolTip="下载输出目录"/>
+                    <Button Grid.Column="2" Content="浏览" Style="{StaticResource SecondaryButtonStyle}"
                             Click="Button_SelectDir_Click" Margin="6,0,0,0"
-                            AutomationProperties.Name="Browse Save Directory"/>
+                            AutomationProperties.Name="浏览保存目录"/>
 
-                    <TextBlock Grid.Column="4" Text="Save Name" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Grid.Column="4" Text="保存名称" Style="{StaticResource LabelStyle}"/>
                     <TextBox Grid.Column="5" x:Name="TextBox_Title" Style="{StaticResource TextBoxStyle}" 
                              TextChanged="TextChanged"
                              PreviewKeyDown="TextBox_Title_PreviewKeyDown"
                              MouseDoubleClick="TextBox_Title_MouseDoubleClick"
-                             AutomationProperties.Name="Save Filename"
-                             ToolTip="Output filename. Double-click to auto-detect from URL"/>
+                             AutomationProperties.Name="保存文件名"
+                             ToolTip="输出文件名。双击从链接自动识别"/>
                 </Grid>
             </StackPanel>
         </Border>
@@ -545,10 +557,10 @@
             </TabControl.Resources>
 
             <!-- TAB 1: DOWNLOAD & BASIC -->
-            <TabItem Header="📦 Download" AutomationProperties.Name="Download">
+            <TabItem Header="📦 下载" AutomationProperties.Name="下载">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
                     <StackPanel>
-                        <GroupBox Header="Basic Paths" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="基本路径" Style="{StaticResource GroupBoxStyle}">
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="90"/>
@@ -559,31 +571,31 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Executable" Style="{StaticResource LabelStyle}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="可执行程序" Style="{StaticResource LabelStyle}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_EXE" Text="N_m3u8DL-RE.exe" 
                                          Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"
-                                         AutomationProperties.Name="N_m3u8DL-RE Executable Path"
-                                         ToolTip="Path to N_m3u8DL-RE executable">
+                                         AutomationProperties.Name="N_m3u8DL-RE 可执行程序路径"
+                                         ToolTip="N_m3u8DL-RE 可执行程序路径">
                                     <TextBox.ContextMenu>
                                         <ContextMenu>
-                                            <MenuItem Header="Cut" Command="Cut"/>
-                                            <MenuItem Header="Copy" Command="Copy"/>
-                                            <MenuItem Header="Paste" Command="Paste"/>
+                                            <MenuItem Header="剪切" Command="Cut"/>
+                                            <MenuItem Header="复制" Command="Copy"/>
+                                            <MenuItem Header="粘贴" Command="Paste"/>
                                             <Separator/>
-                                            <MenuItem Header="Get Downloader" Click="Menu_GetDownloader"/>
+                                            <MenuItem Header="获取下载器" Click="Menu_GetDownloader"/>
                                         </ContextMenu>
                                     </TextBox.ContextMenu>
                                 </TextBox>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Temp Dir" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="临时目录" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_TmpDir" Style="{StaticResource TextBoxStyle}"
                                          TextChanged="TextChanged" Margin="0,8,0,0"
-                                         AutomationProperties.Name="Temporary Directory Path"
-                                         ToolTip="Temporary directory for segment files"/>
+                                         AutomationProperties.Name="临时目录路径"
+                                         ToolTip="分片文件临时目录"/>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Download Flags" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="下载选项" Style="{StaticResource GroupBoxStyle}">
                             <StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -598,50 +610,50 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     
-                                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="CheckBox_Del" AutomationProperties.Name="Delete Temporary Files After Done" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Delete After Done" ToolTip="Delete temporary files after merge"
+                                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="CheckBox_Del" AutomationProperties.Name="完成后删除临时文件" Style="{StaticResource CheckBoxStyle}"
+                                              Content="完成后删除" ToolTip="合并后删除临时文件"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_DisableDate" AutomationProperties.Name="Do Not Write Date Info" Style="{StaticResource CheckBoxStyle}"
-                                              Content="No Date Info" ToolTip="Don't write date info during muxing"
+                                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_DisableDate" AutomationProperties.Name="不写入日期信息" Style="{StaticResource CheckBoxStyle}"
+                                              Content="不写入日期" ToolTip="封装时不写入日期信息"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_DisableProxy" AutomationProperties.Name="Disable System Proxy" Style="{StaticResource CheckBoxStyle}"
-                                              Content="No System Proxy" ToolTip="Disable system proxy"
-                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    
-                                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_ParserOnly" AutomationProperties.Name="Parse Only, Skip Download" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Skip Download" ToolTip="Parse only, don't download"
-                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="CheckBox_Concurrent" AutomationProperties.Name="Concurrent Download" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Concurrent DL" ToolTip="Download audio/video/subtitle concurrently"
-                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="1" Grid.Column="2" x:Name="CheckBox_DisableMerge" AutomationProperties.Name="Skip Merge" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Skip Merge" ToolTip="Don't merge segments after download"
+                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_DisableProxy" AutomationProperties.Name="禁用系统代理" Style="{StaticResource CheckBoxStyle}"
+                                              Content="不使用系统代理" ToolTip="禁用系统代理"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                     
-                                    <CheckBox Grid.Row="2" Grid.Column="0" x:Name="CheckBox_BinaryMerge" AutomationProperties.Name="Binary Merge" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Binary Merge" ToolTip="Use binary concatenation instead of ffmpeg"
+                                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_ParserOnly" AutomationProperties.Name="仅解析，跳过下载" Style="{StaticResource CheckBoxStyle}"
+                                              Content="跳过下载" ToolTip="仅解析，不下载"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="2" Grid.Column="1" x:Name="CheckBox_AudioOnly" AutomationProperties.Name="Audio Only" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Audio Only" ToolTip="Download only audio tracks"
+                                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="CheckBox_Concurrent" AutomationProperties.Name="并发下载" Style="{StaticResource CheckBoxStyle}"
+                                              Content="并发下载" ToolTip="同时下载音频/视频/字幕"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="2" Grid.Column="2" x:Name="CheckBox_DisableCheck" AutomationProperties.Name="Skip Segment Count Check" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Skip Check" ToolTip="Don't verify segment count"
+                                    <CheckBox Grid.Row="1" Grid.Column="2" x:Name="CheckBox_DisableMerge" AutomationProperties.Name="跳过合并" Style="{StaticResource CheckBoxStyle}"
+                                              Content="跳过合并" ToolTip="下载后不合并分片"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                     
-                                    <CheckBox Grid.Row="3" Grid.Column="0" x:Name="CheckBox_SubOnly" AutomationProperties.Name="Subtitle Only" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Subtitle Only" ToolTip="Download only subtitles"
+                                    <CheckBox Grid.Row="2" Grid.Column="0" x:Name="CheckBox_BinaryMerge" AutomationProperties.Name="二进制合并" Style="{StaticResource CheckBoxStyle}"
+                                              Content="二进制合并" ToolTip="使用二进制拼接代替 ffmpeg"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="3" Grid.Column="1" x:Name="CheckBox_AutoSubFix" AutomationProperties.Name="Auto Fix Subtitles" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Auto Sub Fix" ToolTip="Automatically fix subtitle timing"
+                                    <CheckBox Grid.Row="2" Grid.Column="1" x:Name="CheckBox_AudioOnly" AutomationProperties.Name="仅音频" Style="{StaticResource CheckBoxStyle}"
+                                              Content="仅音频" ToolTip="仅下载音频轨道"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="3" Grid.Column="2" x:Name="CheckBox_AutoSelect" AutomationProperties.Name="Auto Select Best Quality" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Auto Select" ToolTip="Automatically select best quality"
+                                    <CheckBox Grid.Row="2" Grid.Column="2" x:Name="CheckBox_DisableCheck" AutomationProperties.Name="跳过分片数量校验" Style="{StaticResource CheckBoxStyle}"
+                                              Content="跳过校验" ToolTip="不校验分片数量"
+                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    
+                                    <CheckBox Grid.Row="3" Grid.Column="0" x:Name="CheckBox_SubOnly" AutomationProperties.Name="仅字幕" Style="{StaticResource CheckBoxStyle}"
+                                              Content="仅字幕" ToolTip="仅下载字幕"
+                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="3" Grid.Column="1" x:Name="CheckBox_AutoSubFix" AutomationProperties.Name="自动修复字幕" Style="{StaticResource CheckBoxStyle}"
+                                              Content="自动修复字幕" ToolTip="自动修复字幕时间轴"
+                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="3" Grid.Column="2" x:Name="CheckBox_AutoSelect" AutomationProperties.Name="自动选择最佳画质" Style="{StaticResource CheckBoxStyle}"
+                                              Content="自动选择" ToolTip="自动选择最佳画质"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                 </Grid>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                    <TextBlock Text="Subtitle Format:" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox x:Name="Combo_SubFormat" AutomationProperties.Name="Subtitle Format" SelectedIndex="0" Width="100"
+                                    <TextBlock Text="字幕格式：" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox x:Name="Combo_SubFormat" AutomationProperties.Name="字幕格式" SelectedIndex="0" Width="100"
                                               SelectionChanged="Combo_SubFormat_SelectionChanged">
                                         <ComboBoxItem Content="SRT"/>
                                         <ComboBoxItem Content="VTT"/>
@@ -654,10 +666,10 @@
             </TabItem>
 
             <!-- TAB 2: NETWORK & SPEED -->
-            <TabItem Header="🌐 Network" AutomationProperties.Name="Network">
+            <TabItem Header="🌐 网络" AutomationProperties.Name="网络">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
                     <StackPanel>
-                        <GroupBox Header="Request &amp; Proxy" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="请求与代理" Style="{StaticResource GroupBoxStyle}">
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="80"/>
@@ -669,31 +681,31 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Headers" Style="{StaticResource LabelStyle}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="请求头" Style="{StaticResource LabelStyle}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_Headers" Style="{StaticResource TextBoxStyle}" 
                                          TextChanged="TextChanged"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
                                          VerticalScrollBarVisibility="Auto"
                                          MinHeight="72"
-                                         AutomationProperties.Name="HTTP Headers"
-                                         ToolTip="HTTP headers separated by newlines or | (e.g., Cookie:xxx&#x0a;User-Agent:yyy)"/>
+                                         AutomationProperties.Name="HTTP 请求头"
+                                         ToolTip="HTTP 请求头，用换行或 | 分隔（例如 Cookie:xxx&#x0a;User-Agent:yyy）"/>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Base URL" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="基础链接" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_Baseurl" Style="{StaticResource TextBoxStyle}" 
                                          TextChanged="TextChanged" Margin="0,8,0,0"
-                                         AutomationProperties.Name="Base URL"
-                                         ToolTip="Override base URL for relative paths"/>
+                                         AutomationProperties.Name="基础链接"
+                                         ToolTip="覆盖相对路径的基础链接"/>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Proxy" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="代理" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_Proxy" Style="{StaticResource TextBoxStyle}" 
                                          TextChanged="TextChanged" Margin="0,8,0,0"
-                                         AutomationProperties.Name="Proxy Address"
-                                         ToolTip="HTTP/SOCKS5 proxy (e.g., http://127.0.0.1:8080)"/>
+                                         AutomationProperties.Name="代理地址"
+                                         ToolTip="HTTP/SOCKS5 代理（例如 http://127.0.0.1:8080）"/>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Performance &amp; Limits" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="性能与限制" Style="{StaticResource GroupBoxStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -703,27 +715,27 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="3">
-                                    <TextBlock Text="Threads" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox x:Name="TextBox_Max" AutomationProperties.Name="Maximum Download Threads" Text="12" Width="45" Style="{StaticResource TextBoxStyle}"
-                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="Maximum download threads"/>
+                                    <TextBlock Text="线程数" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="TextBox_Max" AutomationProperties.Name="最大下载线程数" Text="12" Width="45" Style="{StaticResource TextBoxStyle}"
+                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="最大下载线程数"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="3">
-                                    <TextBlock Text="Retry" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox x:Name="TextBox_Retry" AutomationProperties.Name="Download Retry Count" Text="3" Width="45" Style="{StaticResource TextBoxStyle}"
-                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="Retry count on failure"/>
+                                    <TextBlock Text="重试" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="TextBox_Retry" AutomationProperties.Name="下载重试次数" Text="3" Width="45" Style="{StaticResource TextBoxStyle}"
+                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="失败重试次数"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="3">
-                                    <TextBlock Text="Timeout" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox x:Name="TextBox_Timeout" AutomationProperties.Name="HTTP Request Timeout In Seconds" Text="100" Width="45" Style="{StaticResource TextBoxStyle}"
-                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="HTTP timeout in seconds"/>
+                                    <TextBlock Text="超时" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="TextBox_Timeout" AutomationProperties.Name="HTTP 请求超时（秒）" Text="100" Width="45" Style="{StaticResource TextBoxStyle}"
+                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="HTTP 超时（秒）"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="3">
-                                    <TextBlock Text="Speed Limit" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox x:Name="TextBox_MaxSpeed" AutomationProperties.Name="Download Speed Limit" Text="" Width="60" Style="{StaticResource TextBoxStyle}"
-                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="Speed limit (e.g., 15M or 500K)"/>
+                                    <TextBlock Text="限速" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox x:Name="TextBox_MaxSpeed" AutomationProperties.Name="下载限速" Text="" Width="60" Style="{StaticResource TextBoxStyle}"
+                                             TextChanged="TextChanged" HorizontalContentAlignment="Center" ToolTip="限速（例如 15M 或 500K）"/>
                                 </StackPanel>
                             </Grid>
                         </GroupBox>
@@ -731,19 +743,19 @@
                         <!-- Cloudflare Bypass Section -->
                         <!-- "curl__cffi": the header ContentPresenter sets RecognizesAccessKey="True",
                              so WPF's AccessText eats a single underscore. Doubling it renders one. -->
-                        <GroupBox Header="⚡ Cloudflare Bypass (curl__cffi)" Style="{StaticResource GroupBoxStyle}" Foreground="{StaticResource CfAmberBrush}">
+                        <GroupBox Header="⚡ Cloudflare 绕过 (curl__cffi)" Style="{StaticResource GroupBoxStyle}" Foreground="{StaticResource CfAmberBrush}">
                             <StackPanel>
-                                <CheckBox x:Name="CheckBox_BypassCF" AutomationProperties.Name="Enable Cloudflare Bypass" Content="Enable Cloudflare Bypass"
+                                <CheckBox x:Name="CheckBox_BypassCF" AutomationProperties.Name="启用 Cloudflare 绕过" Content="启用 Cloudflare 绕过"
                                           Foreground="{StaticResource CfAmberBrush}" FontWeight="SemiBold" Margin="0,0,0,6"
                                           Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                 
                                 <Border x:Name="Border_CfScopeWarning" Visibility="Collapsed"
                                         Background="#2A2113" BorderBrush="{StaticResource CfAmberBrush}"
                                         BorderThickness="1" CornerRadius="3" Padding="8,6" Margin="0,0,0,8">
-                                    <TextBlock TextWrapping="Wrap" FontSize="11"
+                                    <TextBlock TextWrapping="Wrap" FontSize="13"
                                                Foreground="{StaticResource CfAmberBrush}"
-                                               AutomationProperties.Name="Cloudflare Mode Scope Warning"
-                                               Text="Cloudflare mode runs a Python script instead of N_m3u8DL-RE. It uses only the input URL, save folder, save name, and the fields in this section — options on the Download, Security, Media, Live and Advanced tabs are ignored."/>
+                                               AutomationProperties.Name="Cloudflare 模式范围警告"
+                                               Text="Cloudflare 模式运行 Python 脚本而非 N_m3u8DL-RE。它仅使用输入链接、保存目录、保存名称以及本节字段 — 下载、安全、媒体、直播和高级页的选项将被忽略。"/>
                                 </Border>
                                 
                                 <Grid Margin="0,4">
@@ -752,8 +764,8 @@
                                         <ColumnDefinition Width="150"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Fingerprint" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox Grid.Column="1" x:Name="Combo_CFImpersonate" AutomationProperties.Name="Cloudflare TLS Fingerprint" SelectedIndex="0"
+                                    <TextBlock Text="指纹" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox Grid.Column="1" x:Name="Combo_CFImpersonate" AutomationProperties.Name="Cloudflare TLS 指纹" SelectedIndex="0"
                                               SelectionChanged="Combo_CFImpersonate_SelectionChanged">
                                         <ComboBoxItem Content="chrome" Tag="chrome"/>
                                         <ComboBoxItem Content="chrome120" Tag="chrome120"/>
@@ -768,8 +780,8 @@
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Referer" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox Grid.Column="1" x:Name="TextBox_CFReferer" AutomationProperties.Name="Cloudflare Referer Header" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
+                                    <TextBlock Text="来源页" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Grid.Column="1" x:Name="TextBox_CFReferer" AutomationProperties.Name="Cloudflare 来源页请求头" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
                                 </Grid>
 
                                 <Grid Margin="0,4">
@@ -781,7 +793,7 @@
                                     <TextBox Grid.Column="1" x:Name="TextBox_CFCookie" AutomationProperties.Name="Cloudflare Cookie" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
                                 </Grid>
 
-                                <CheckBox x:Name="CheckBox_CFKeepSegs" AutomationProperties.Name="Keep Segment Files After Merge" Content="Keep segment files after merge"
+                                <CheckBox x:Name="CheckBox_CFKeepSegs" AutomationProperties.Name="合并后保留分片文件" Content="合并后保留分片文件"
                                           Style="{StaticResource CheckBoxStyle}" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                             </StackPanel>
                         </GroupBox>
@@ -790,10 +802,10 @@
             </TabItem>
 
             <!-- TAB 3: SECURITY & ENCRYPTION -->
-            <TabItem Header="🔒 Security" AutomationProperties.Name="Security">
+            <TabItem Header="🔒 安全" AutomationProperties.Name="安全">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
                     <StackPanel>
-                        <GroupBox Header="Keys &amp; Vectors" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="密钥与向量" Style="{StaticResource GroupBoxStyle}">
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="90"/>
@@ -806,34 +818,34 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Key" Style="{StaticResource LabelStyle}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="密钥" Style="{StaticResource LabelStyle}"/>
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_Key" Style="{StaticResource TextBoxStyle}" 
                                          TextChanged="TextChanged" AllowDrop="True"
                                          PreviewDragEnter="TextBox_Key_PreviewDragEnter" PreviewDragOver="TextBox_Key_PreviewDragOver" PreviewDrop="TextBox_Key_PreviewDrop"
-                                         AutomationProperties.Name="Decryption Key"
-                                         ToolTip="Decryption key (HEX/Base64) or path to key file. Supports KID:KEY format"/>
+                                         AutomationProperties.Name="解密密钥"
+                                         ToolTip="解密密钥（HEX/Base64）或密钥文件路径。支持 KID:KEY 格式"/>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="HLS Key" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="HLS 密钥" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_CustomHLSKey" Style="{StaticResource TextBoxStyle}"
                                          TextChanged="TextChanged" Margin="0,8,0,0"
-                                         AutomationProperties.Name="Custom HLS Key"
-                                         ToolTip="Custom HLS key (HEX/Base64)"/>
+                                         AutomationProperties.Name="自定义 HLS 密钥"
+                                         ToolTip="自定义 HLS 密钥（HEX/Base64）"/>
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="IV" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_IV" Style="{StaticResource TextBoxStyle}" 
                                          TextChanged="TextChanged" Margin="0,8,0,0"
-                                         AutomationProperties.Name="Initialization Vector IV"
-                                         ToolTip="Custom HLS initialization vector (HEX/Base64)"/>
+                                         AutomationProperties.Name="初始化向量 IV"
+                                         ToolTip="自定义 HLS 初始化向量（HEX/Base64）"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Key File" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="密钥文件" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
                                 <TextBox Grid.Row="3" Grid.Column="1" x:Name="TextBox_KeyTextFile" Style="{StaticResource TextBoxStyle}" 
                                          TextChanged="TextChanged" AllowDrop="True" Margin="0,8,0,0"
-                                         AutomationProperties.Name="Key Text File Path"
-                                         ToolTip="Path to key text file for decryption"/>
+                                         AutomationProperties.Name="密钥文本文件路径"
+                                         ToolTip="解密密钥文本文件路径"/>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Decryption Engine" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="解密引擎" Style="{StaticResource GroupBoxStyle}">
                             <StackPanel>
                                 <Grid Margin="0,4">
                                     <Grid.ColumnDefinitions>
@@ -843,15 +855,15 @@
                                         <ColumnDefinition Width="90"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Engine" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox Grid.Column="1" x:Name="Combo_DecryptionEngine" AutomationProperties.Name="Decryption Engine" SelectedIndex="0" SelectionChanged="Combo_DecryptionEngine_SelectionChanged">
+                                    <TextBlock Grid.Column="0" Text="引擎" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox Grid.Column="1" x:Name="Combo_DecryptionEngine" AutomationProperties.Name="解密引擎" SelectedIndex="0" SelectionChanged="Combo_DecryptionEngine_SelectionChanged">
                                         <ComboBoxItem Content="MP4DECRYPT"/>
                                         <ComboBoxItem Content="SHAKA_PACKAGER"/>
                                         <ComboBoxItem Content="FFMPEG"/>
                                     </ComboBox>
 
-                                    <TextBlock Grid.Column="3" Text="HLS Method" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox Grid.Column="4" x:Name="Combo_CustomHLSMethod" AutomationProperties.Name="Custom HLS Method" SelectedIndex="0" SelectionChanged="Combo_HLSMethod_SelectionChanged">
+                                    <TextBlock Grid.Column="3" Text="HLS 方法" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox Grid.Column="4" x:Name="Combo_CustomHLSMethod" AutomationProperties.Name="自定义 HLS 方法" SelectedIndex="0" SelectionChanged="Combo_HLSMethod_SelectionChanged">
                                         <ComboBoxItem Content="(Default)"/>
                                         <ComboBoxItem Content="AES_128"/>
                                         <ComboBoxItem Content="AES_128_ECB"/>
@@ -868,13 +880,13 @@
                                         <ColumnDefinition Width="90"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Bin Path" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox Grid.Column="1" x:Name="TextBox_DecryptionBinPath" AutomationProperties.Name="Decryption Binary Path" Style="{StaticResource TextBoxStyle}" 
-                                             TextChanged="TextChanged" ToolTip="Path to decryption binary (mp4decrypt/shaka-packager)"/>
+                                    <TextBlock Text="程序路径" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Grid.Column="1" x:Name="TextBox_DecryptionBinPath" AutomationProperties.Name="解密程序路径" Style="{StaticResource TextBoxStyle}" 
+                                             TextChanged="TextChanged" ToolTip="解密程序路径（mp4decrypt/shaka-packager）"/>
                                 </Grid>
 
-                                <CheckBox x:Name="CheckBox_MP4RealTimeDecryption" AutomationProperties.Name="MP4 Real-Time Decryption" Style="{StaticResource CheckBoxStyle}"
-                                          Content="MP4 Real-Time Decryption" Margin="0,10,0,0" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                <CheckBox x:Name="CheckBox_MP4RealTimeDecryption" AutomationProperties.Name="MP4 实时解密" Style="{StaticResource CheckBoxStyle}"
+                                          Content="MP4 实时解密" Margin="0,10,0,0" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
@@ -882,10 +894,10 @@
             </TabItem>
 
             <!-- TAB 4: MEDIA & STREAMS -->
-            <TabItem Header="🎬 Media" AutomationProperties.Name="Media">
+            <TabItem Header="🎬 媒体" AutomationProperties.Name="媒体">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
                     <StackPanel>
-                        <GroupBox Header="Stream Selection (Regex Filters)" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="流选择（正则过滤）" Style="{StaticResource GroupBoxStyle}">
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="90"/>
@@ -900,27 +912,27 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Select Video" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_SelectVideo" AutomationProperties.Name="Select Video Regex" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="选择视频" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_SelectVideo" AutomationProperties.Name="选择视频正则" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Select Audio" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_SelectAudio" AutomationProperties.Name="Select Audio Regex" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="选择音频" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_SelectAudio" AutomationProperties.Name="选择音频正则" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Select Sub" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_SelectSubtitle" AutomationProperties.Name="Select Subtitle Regex" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="选择字幕" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_SelectSubtitle" AutomationProperties.Name="选择字幕正则" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Drop Video" Style="{StaticResource LabelStyle}" Foreground="{StaticResource DropLabelBrush}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TextBox_DropVideo" AutomationProperties.Name="Drop Video Regex" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="排除视频" Style="{StaticResource LabelStyle}" Foreground="{StaticResource DropLabelBrush}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TextBox_DropVideo" AutomationProperties.Name="排除视频正则" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Drop Audio" Style="{StaticResource LabelStyle}" Foreground="{StaticResource DropLabelBrush}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TextBox_DropAudio" AutomationProperties.Name="Drop Audio Regex" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="排除音频" Style="{StaticResource LabelStyle}" Foreground="{StaticResource DropLabelBrush}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TextBox_DropAudio" AutomationProperties.Name="排除音频正则" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Drop Sub" Style="{StaticResource LabelStyle}" Foreground="{StaticResource DropLabelBrush}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="TextBox_DropSubtitle" AutomationProperties.Name="Drop Subtitle Regex" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="排除字幕" Style="{StaticResource LabelStyle}" Foreground="{StaticResource DropLabelBrush}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="TextBox_DropSubtitle" AutomationProperties.Name="排除字幕正则" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Time Range &amp; Muxing" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="时间范围与封装" Style="{StaticResource GroupBoxStyle}">
                             <StackPanel>
                                 <Grid Margin="0,4">
                                     <Grid.ColumnDefinitions>
@@ -929,10 +941,10 @@
                                         <ColumnDefinition Width="30"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Range" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox Grid.Column="1" x:Name="TextBox_RangeStart" AutomationProperties.Name="Time Range Start" Text="00:00:00" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
+                                    <TextBlock Text="范围" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Grid.Column="1" x:Name="TextBox_RangeStart" AutomationProperties.Name="时间范围开始" Text="00:00:00" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
                                     <TextBlock Grid.Column="2" Text="—" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    <TextBox Grid.Column="3" x:Name="TextBox_RangeEnd" AutomationProperties.Name="Time Range End" Text="00:00:00" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
+                                    <TextBox Grid.Column="3" x:Name="TextBox_RangeEnd" AutomationProperties.Name="时间范围结束" Text="00:00:00" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
                                 </Grid>
 
                                 <Grid Margin="0,8,0,0">
@@ -940,8 +952,8 @@
                                         <ColumnDefinition Width="90"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Mux Import" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox Grid.Column="1" x:Name="TextBox_MuxJson" AutomationProperties.Name="Mux Import File" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" AllowDrop="True"
+                                    <TextBlock Text="封装导入" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Grid.Column="1" x:Name="TextBox_MuxJson" AutomationProperties.Name="封装导入文件" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" AllowDrop="True"
                                              PreviewDragEnter="TextBox_MuxJson_PreviewDragEnter" PreviewDragOver="TextBox_MuxJson_PreviewDragOver" PreviewDrop="TextBox_MuxJson_PreviewDrop"/>
                                 </Grid>
 
@@ -951,9 +963,9 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <CheckBox Grid.Column="0" x:Name="CheckBox_MuxAfterDone" AutomationProperties.Name="Enable Muxing After Download" Style="{StaticResource CheckBoxStyle}" Content="Enable Mux" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Column="1" x:Name="CheckBox_MuxKeepFiles" AutomationProperties.Name="Keep Source Files After Muxing" Style="{StaticResource CheckBoxStyle}" Content="Keep Files" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Column="2" x:Name="CheckBox_MuxSkipSub" AutomationProperties.Name="Skip Subtitles When Muxing" Style="{StaticResource CheckBoxStyle}" Content="Skip Subtitles" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Column="0" x:Name="CheckBox_MuxAfterDone" AutomationProperties.Name="下载后启用封装" Style="{StaticResource CheckBoxStyle}" Content="启用封装" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Column="1" x:Name="CheckBox_MuxKeepFiles" AutomationProperties.Name="封装后保留源文件" Style="{StaticResource CheckBoxStyle}" Content="保留文件" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Column="2" x:Name="CheckBox_MuxSkipSub" AutomationProperties.Name="封装时跳过字幕" Style="{StaticResource CheckBoxStyle}" Content="跳过字幕" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                 </Grid>
 
                                 <Grid Margin="0,8,0,0">
@@ -967,20 +979,20 @@
                                         <ColumnDefinition Width="60"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Format" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox Grid.Column="1" x:Name="Combo_MuxFormat" AutomationProperties.Name="Mux Output Format" SelectedIndex="0" SelectionChanged="Combo_MuxFormat_SelectionChanged">
+                                    <TextBlock Grid.Column="0" Text="格式" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox Grid.Column="1" x:Name="Combo_MuxFormat" AutomationProperties.Name="封装输出格式" SelectedIndex="0" SelectionChanged="Combo_MuxFormat_SelectionChanged">
                                         <ComboBoxItem Content="mp4"/>
                                         <ComboBoxItem Content="mkv"/>
                                     </ComboBox>
 
-                                    <TextBlock Grid.Column="3" Text="Muxer" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox Grid.Column="4" x:Name="Combo_Muxer" AutomationProperties.Name="Muxer" SelectedIndex="0" SelectionChanged="Combo_Muxer_SelectionChanged">
+                                    <TextBlock Grid.Column="3" Text="封装器" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox Grid.Column="4" x:Name="Combo_Muxer" AutomationProperties.Name="封装器" SelectedIndex="0" SelectionChanged="Combo_Muxer_SelectionChanged">
                                         <ComboBoxItem Content="ffmpeg"/>
                                         <ComboBoxItem Content="mkvmerge"/>
                                     </ComboBox>
 
-                                    <TextBlock Grid.Column="6" Text="Bin Path" Style="{StaticResource LabelStyle}"/>
-                                    <TextBox Grid.Column="7" x:Name="TextBox_MuxBinPath" AutomationProperties.Name="Muxer Binary Path" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
+                                    <TextBlock Grid.Column="6" Text="程序路径" Style="{StaticResource LabelStyle}"/>
+                                    <TextBox Grid.Column="7" x:Name="TextBox_MuxBinPath" AutomationProperties.Name="封装器程序路径" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
@@ -989,10 +1001,10 @@
             </TabItem>
 
             <!-- TAB 5: LIVE RECORDING -->
-            <TabItem Header="📡 Live" AutomationProperties.Name="Live">
+            <TabItem Header="📡 直播" AutomationProperties.Name="直播">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
                     <StackPanel>
-                        <GroupBox Header="Live Recording Options" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="直播录制选项" Style="{StaticResource GroupBoxStyle}">
                             <StackPanel>
                                 <Grid Margin="0,4">
                                     <Grid.ColumnDefinitions>
@@ -1005,12 +1017,12 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="CheckBox_LivePerformAsVod" AutomationProperties.Name="Treat Live Stream As VOD" Style="{StaticResource CheckBoxStyle}" Content="Perform as VOD" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_LiveRealTimeMerge" AutomationProperties.Name="Live Real-Time Merge" Style="{StaticResource CheckBoxStyle}" Content="Realtime Merge" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_LiveKeepSegments" AutomationProperties.Name="Keep Live Segments" Style="{StaticResource CheckBoxStyle}" Content="Keep Segments" IsChecked="True" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="CheckBox_LivePerformAsVod" AutomationProperties.Name="将直播流按点播处理" Style="{StaticResource CheckBoxStyle}" Content="按点播处理" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_LiveRealTimeMerge" AutomationProperties.Name="直播实时合并" Style="{StaticResource CheckBoxStyle}" Content="实时合并" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_LiveKeepSegments" AutomationProperties.Name="保留直播分片" Style="{StaticResource CheckBoxStyle}" Content="保留分片" IsChecked="True" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
 
-                                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_LivePipeMux" AutomationProperties.Name="Live Pipe Mux" Style="{StaticResource CheckBoxStyle}" Content="Pipe Mux" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="CheckBox_LiveFixVttByAudio" AutomationProperties.Name="Fix Live VTT By Audio" Style="{StaticResource CheckBoxStyle}" Content="Fix VTT by Audio" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_LivePipeMux" AutomationProperties.Name="直播管道封装" Style="{StaticResource CheckBoxStyle}" Content="管道封装" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="CheckBox_LiveFixVttByAudio" AutomationProperties.Name="根据音频修复直播 VTT" Style="{StaticResource CheckBoxStyle}" Content="根据音频修复 VTT" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                 </Grid>
 
                                 <Grid Margin="0,12,0,0">
@@ -1021,18 +1033,18 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                        <TextBlock Text="Rec Limit" Style="{StaticResource LabelStyle}"/>
-                                        <TextBox x:Name="TextBox_LiveRecordLimit" AutomationProperties.Name="Live Recording Time Limit" Width="70" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" HorizontalContentAlignment="Center"/>
+                                        <TextBlock Text="录制限制" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox x:Name="TextBox_LiveRecordLimit" AutomationProperties.Name="直播录制时间限制" Width="70" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" HorizontalContentAlignment="Center"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <TextBlock Text="Wait (s)" Style="{StaticResource LabelStyle}"/>
-                                        <TextBox x:Name="TextBox_LiveWaitTime" AutomationProperties.Name="Live Wait Time In Seconds" Width="50" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" HorizontalContentAlignment="Center"/>
+                                        <TextBlock Text="等待（秒）" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox x:Name="TextBox_LiveWaitTime" AutomationProperties.Name="直播等待时间（秒）" Width="50" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" HorizontalContentAlignment="Center"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                        <TextBlock Text="Take" Style="{StaticResource LabelStyle}"/>
-                                        <TextBox x:Name="TextBox_LiveTakeCount" AutomationProperties.Name="Live Segment Take Count" Text="16" Width="50" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" HorizontalContentAlignment="Center"/>
+                                        <TextBlock Text="取数" Style="{StaticResource LabelStyle}"/>
+                                        <TextBox x:Name="TextBox_LiveTakeCount" AutomationProperties.Name="直播分片取数" Text="16" Width="50" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" HorizontalContentAlignment="Center"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -1042,10 +1054,10 @@
             </TabItem>
 
             <!-- TAB 6: ADVANCED & LOGS -->
-            <TabItem Header="⚙️ Advanced" AutomationProperties.Name="Advanced">
+            <TabItem Header="⚙️ 高级" AutomationProperties.Name="高级">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
                     <StackPanel>
-                        <GroupBox Header="Custom Paths &amp; Variables" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="自定义路径与变量" Style="{StaticResource GroupBoxStyle}">
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="90"/>
@@ -1060,27 +1072,27 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Save Pattern" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_SavePattern" AutomationProperties.Name="Save Name Pattern" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="保存模板" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBox_SavePattern" AutomationProperties.Name="保存名称模板" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged"/>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Log File" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_LogFilePath" AutomationProperties.Name="Log File Path" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="日志文件" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBox_LogFilePath" AutomationProperties.Name="日志文件路径" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="FFmpeg Path" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_FFmpegPath" AutomationProperties.Name="FFmpeg Binary Path" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="FFmpeg 路径" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_FFmpegPath" AutomationProperties.Name="FFmpeg 程序路径" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Ad Keyword" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TextBox_AdKeyword" AutomationProperties.Name="Ad Keyword Filter" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="广告关键词" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TextBox_AdKeyword" AutomationProperties.Name="广告关键词过滤" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="URL Args" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TextBox_UrlProcessorArgs" AutomationProperties.Name="URL Processor Arguments" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="URL 参数" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TextBox_UrlProcessorArgs" AutomationProperties.Name="URL 处理器参数" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
 
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Start At" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
-                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="TextBox_TaskStartAt" AutomationProperties.Name="Scheduled Start Time" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="开始时间" Style="{StaticResource LabelStyle}" Margin="0,6,8,0"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="TextBox_TaskStartAt" AutomationProperties.Name="计划开始时间" Style="{StaticResource TextBoxStyle}" TextChanged="TextChanged" Margin="0,6,0,0"/>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Environment &amp; System Flags" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="环境与系统标志" Style="{StaticResource GroupBoxStyle}">
                             <StackPanel>
                                 <Grid Margin="0,4">
                                     <Grid.ColumnDefinitions>
@@ -1090,8 +1102,8 @@
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="100"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Log Level" Style="{StaticResource LabelStyle}"/>
-                                    <ComboBox Grid.Column="1" x:Name="Combo_LogLevel" AutomationProperties.Name="Downloader Log Level" SelectedIndex="2" SelectionChanged="Combo_LogLevel_SelectionChanged">
+                                    <TextBlock Grid.Column="0" Text="日志级别" Style="{StaticResource LabelStyle}"/>
+                                    <ComboBox Grid.Column="1" x:Name="Combo_LogLevel" AutomationProperties.Name="下载器日志级别" SelectedIndex="2" SelectionChanged="Combo_LogLevel_SelectionChanged">
                                         <ComboBoxItem Content="DEBUG"/>
                                         <ComboBoxItem Content="ERROR"/>
                                         <ComboBoxItem Content="INFO"/>
@@ -1099,10 +1111,10 @@
                                         <ComboBoxItem Content="OFF"/>
                                     </ComboBox>
 
-                                    <TextBlock Grid.Column="3" Text="DL Language" Style="{StaticResource LabelStyle}"/>
+                                    <TextBlock Grid.Column="3" Text="下载器语言" Style="{StaticResource LabelStyle}"/>
                                     <ComboBox Grid.Column="4" x:Name="Combo_UILanguage"
-                                              AutomationProperties.Name="Downloader Console Language"
-                                              ToolTip="Language for N_m3u8DL-RE's own console output. This does not change the GUI's language."
+                                              AutomationProperties.Name="下载器控制台语言"
+                                              ToolTip="N_m3u8DL-RE 自身控制台输出的语言。不会改变 GUI 界面语言。"
                                               SelectedIndex="0" SelectionChanged="Combo_UILanguage_SelectionChanged">
                                         <ComboBoxItem Content="(Default)"/>
                                         <ComboBoxItem Content="en-US"/>
@@ -1123,33 +1135,33 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
-                                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="CheckBox_AppendUrlParams" AutomationProperties.Name="Append URL Parameters" Style="{StaticResource CheckBoxStyle}" Content="Append URL Params" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_NoLog" AutomationProperties.Name="Disable Log File" Style="{StaticResource CheckBoxStyle}" Content="No Log" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_WriteMetaJson" AutomationProperties.Name="Write Meta JSON" Style="{StaticResource CheckBoxStyle}" Content="Write Meta JSON" IsChecked="True" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="0" Grid.Column="0" x:Name="CheckBox_AppendUrlParams" AutomationProperties.Name="附加 URL 参数" Style="{StaticResource CheckBoxStyle}" Content="附加 URL 参数" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_NoLog" AutomationProperties.Name="禁用日志文件" Style="{StaticResource CheckBoxStyle}" Content="不记录日志" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_WriteMetaJson" AutomationProperties.Name="写入元数据 JSON" Style="{StaticResource CheckBoxStyle}" Content="写入元数据 JSON" IsChecked="True" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
 
-                                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_UseFFmpegConcat" AutomationProperties.Name="Use FFmpeg Concat Demuxer" Style="{StaticResource CheckBoxStyle}" Content="FFmpeg Concat" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="CheckBox_AllowHlsMultiExtMap" AutomationProperties.Name="Allow HLS Multiple EXT-X-MAP" Style="{StaticResource CheckBoxStyle}" Content="Multi EXT-MAP" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="1" Grid.Column="2" x:Name="CheckBox_DisableUpdateCheck" AutomationProperties.Name="Disable Downloader Update Check" Style="{StaticResource CheckBoxStyle}" Content="No Update Check" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_UseFFmpegConcat" AutomationProperties.Name="使用 FFmpeg Concat 分离器" Style="{StaticResource CheckBoxStyle}" Content="FFmpeg 拼接" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="1" x:Name="CheckBox_AllowHlsMultiExtMap" AutomationProperties.Name="允许多个 HLS EXT-X-MAP" Style="{StaticResource CheckBoxStyle}" Content="多 EXT-MAP" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="2" x:Name="CheckBox_DisableUpdateCheck" AutomationProperties.Name="禁用下载器更新检查" Style="{StaticResource CheckBoxStyle}" Content="不检查更新" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
 
-                                    <CheckBox Grid.Row="2" Grid.Column="0" x:Name="CheckBox_ForceAnsiConsole" AutomationProperties.Name="Force ANSI Console" Style="{StaticResource CheckBoxStyle}" Content="Force ANSI Console" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="2" Grid.Column="1" x:Name="CheckBox_NoAnsiColor" AutomationProperties.Name="Disable ANSI Color" Style="{StaticResource CheckBoxStyle}" Content="No ANSI Color" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="2" Grid.Column="0" x:Name="CheckBox_ForceAnsiConsole" AutomationProperties.Name="强制 ANSI 控制台" Style="{StaticResource CheckBoxStyle}" Content="强制 ANSI 控制台" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <CheckBox Grid.Row="2" Grid.Column="1" x:Name="CheckBox_NoAnsiColor" AutomationProperties.Name="禁用 ANSI 颜色" Style="{StaticResource CheckBoxStyle}" Content="无 ANSI 颜色" Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Header="🔄 GUI Auto-Update Engine" Style="{StaticResource GroupBoxStyle}">
+                        <GroupBox Header="🔄 GUI 自动更新" Style="{StaticResource GroupBoxStyle}">
                             <StackPanel>
                                 <Grid Margin="0,4">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <CheckBox x:Name="CheckBox_AutoCheckGuiUpdate" AutomationProperties.Name="Auto Check GUI Updates On Startup" Style="{StaticResource CheckBoxStyle}"
-                                              Content="Auto Check GUI Updates on Startup" IsChecked="True"
+                                    <CheckBox x:Name="CheckBox_AutoCheckGuiUpdate" AutomationProperties.Name="启动时自动检查 GUI 更新" Style="{StaticResource CheckBoxStyle}"
+                                              Content="启动时自动检查 GUI 更新" IsChecked="True"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                                         <TextBlock x:Name="TextBlock_UpdateStatus" Text="" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                        <Button x:Name="Button_CheckUpdate" AutomationProperties.Name="Check For GUI Updates Now" Content="Check Now"
+                                        <Button x:Name="Button_CheckUpdate" AutomationProperties.Name="立即检查 GUI 更新" Content="立即检查"
                                                 Style="{StaticResource SecondaryButtonStyle}"
                                                 Click="Button_CheckUpdate_Click" Padding="10,3"/>
                                     </StackPanel>
@@ -1180,28 +1192,28 @@
                                  Background="{StaticResource CardBrush}"
                                  Foreground="{StaticResource AccentBrush}"
                                  BorderThickness="0" VerticalAlignment="Center"
-                                 AutomationProperties.Name="Download Progress"/>
+                                 AutomationProperties.Name="下载进度"/>
 
-                    <TextBlock x:Name="TextBlock_Status" Grid.Column="1" Text="Ready"
+                    <TextBlock x:Name="TextBlock_Status" Grid.Column="1" Text="就绪"
                                Style="{StaticResource LabelStyle}" Margin="10,0,0,0"
                                TextTrimming="CharacterEllipsis"
-                               AutomationProperties.Name="Download Status"
+                               AutomationProperties.Name="下载状态"
                                AutomationProperties.LiveSetting="Polite"/>
 
-                    <Button x:Name="Button_OpenFolder" Grid.Column="2" Content="Open Folder"
+                    <Button x:Name="Button_OpenFolder" Grid.Column="2" Content="打开文件夹"
                             Style="{StaticResource SecondaryButtonStyle}"
-                            Click="Button_OpenFolder_Click" Padding="8,2" FontSize="11"
+                            Click="Button_OpenFolder_Click" Padding="8,2" FontSize="13"
                             Visibility="Collapsed" Margin="0,0,6,0"
-                            AutomationProperties.Name="Open Output Folder"
-                            ToolTip="Open the folder the download was saved to"/>
+                            AutomationProperties.Name="打开输出文件夹"
+                            ToolTip="打开下载保存所在的文件夹"/>
 
-                    <ToggleButton x:Name="ToggleButton_Log" Grid.Column="3" Content="Log"
-                                  Padding="8,2" FontSize="11" Cursor="Hand"
+                    <ToggleButton x:Name="ToggleButton_Log" Grid.Column="3" Content="日志"
+                                  Padding="8,2" FontSize="13" Cursor="Hand"
                                   Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}"
                                   BorderBrush="{StaticResource BorderBrushCustom}" BorderThickness="1"
                                   Checked="ToggleButton_Log_Changed" Unchecked="ToggleButton_Log_Changed"
-                                  AutomationProperties.Name="Toggle Download Log"
-                                  ToolTip="Show or hide the download log"/>
+                                  AutomationProperties.Name="切换下载日志"
+                                  ToolTip="显示或隐藏下载日志"/>
                 </Grid>
 
                 <!-- Log panel (collapsed by default) -->
@@ -1212,8 +1224,8 @@
                          Background="{StaticResource CommandBarBrush}"
                          Foreground="{StaticResource TextPrimaryBrush}"
                          BorderBrush="{StaticResource BorderBrushCustom}" BorderThickness="1"
-                         FontFamily="Consolas" FontSize="11"
-                         AutomationProperties.Name="Download Log"/>
+                         FontFamily="Consolas" FontSize="13"
+                         AutomationProperties.Name="下载日志"/>
 
                 <!-- Command bar (unchanged) -->
                 <Grid>
@@ -1222,16 +1234,16 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Command:" Style="{StaticResource LabelStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="命令：" Style="{StaticResource LabelStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     <TextBox Grid.Column="1" x:Name="TextBox_Parameter" Style="{StaticResource TextBoxStyle}"
-                             IsReadOnly="True" ToolTip="Generated command-line arguments"
-                             AutomationProperties.Name="Generated Command Preview"
-                             Background="{StaticResource CommandBarBrush}" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource CommandTextBrush}"/>
-                    <Button Grid.Column="2" x:Name="Button_CopyCommand" Content="📋 Copy"
+                             IsReadOnly="True" ToolTip="生成的命令行参数"
+                             AutomationProperties.Name="生成的命令预览"
+                             Background="{StaticResource CommandBarBrush}" FontFamily="Consolas" FontSize="13" Foreground="{StaticResource CommandTextBrush}"/>
+                    <Button Grid.Column="2" x:Name="Button_CopyCommand" Content="📋 复制"
                             Style="{StaticResource SecondaryButtonStyle}"
-                            Click="Button_CopyCommand_Click" Margin="6,0,0,0" Padding="8,2" FontSize="11"
-                            AutomationProperties.Name="Copy Command to Clipboard"
-                            ToolTip="Copy generated command to clipboard"/>
+                            Click="Button_CopyCommand_Click" Margin="6,0,0,0" Padding="8,2" FontSize="13"
+                            AutomationProperties.Name="复制命令到剪贴板"
+                            ToolTip="复制生成的命令到剪贴板"/>
                 </Grid>
             </StackPanel>
         </Border>

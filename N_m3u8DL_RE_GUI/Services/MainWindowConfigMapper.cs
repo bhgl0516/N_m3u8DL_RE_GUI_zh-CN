@@ -88,6 +88,7 @@ internal static class MainWindowConfigMapper
         state.Set("NoAnsiColor", Flag(window.CheckBox_NoAnsiColor.IsChecked == true));
         state.Set("LogFilePath", window.TextBox_LogFilePath.Text);
         state.Set("BypassCloudflare", Flag(window.CheckBox_BypassCF?.IsChecked == true));
+        state.SetEncodedBase64("UIFont", (window.Combo_UIFont?.SelectedItem as WpfComboBoxItem)?.Tag as string ?? string.Empty);
 
         return state;
     }

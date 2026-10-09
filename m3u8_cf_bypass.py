@@ -6,11 +6,22 @@ import subprocess
 import time
 import datetime
 import re
+import threading
 from urllib.parse import urljoin, urlparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Enable ANSI escape sequences on Windows CMD
 if os.name == "nt":
     os.system("")
+
+# Force UTF-8 output so glyphs like • █ ░ never raise UnicodeEncodeError on
+# GBK consoles (the GUI .bat already sets PYTHONUTF8=1 + chcp 65001; this also
+# protects manual runs from a cp936/GBK code page).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 
 class Colors:
@@ -27,6 +38,7 @@ class Colors:
 
 class Logger:
     in_progress_line = False
+    _lock = threading.Lock()
 
     @staticmethod
     def _time():
@@ -41,23 +53,27 @@ class Logger:
 
     @classmethod
     def info(cls, msg):
-        cls._check_line_reset()
-        print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.GREEN}INFO{Colors.RESET}  : {msg}")
+        with cls._lock:
+            cls._check_line_reset()
+            print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.GREEN}INFO{Colors.RESET}  : {msg}")
 
     @classmethod
     def warn(cls, msg):
-        cls._check_line_reset()
-        print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.YELLOW}WARN{Colors.RESET}  : {msg}")
+        with cls._lock:
+            cls._check_line_reset()
+            print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.YELLOW}WARN{Colors.RESET}  : {msg}")
 
     @classmethod
     def error(cls, msg):
-        cls._check_line_reset()
-        print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.RED}ERROR{Colors.RESET} : {msg}")
+        with cls._lock:
+            cls._check_line_reset()
+            print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.RED}ERROR{Colors.RESET} : {msg}")
 
     @classmethod
     def debug(cls, msg):
-        cls._check_line_reset()
-        print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.DIM}DEBUG{Colors.RESET} : {msg}")
+        with cls._lock:
+            cls._check_line_reset()
+            print(f"{Colors.DIM}{cls._time()}{Colors.RESET} {Colors.UNDERLINE}{Colors.DIM}DEBUG{Colors.RESET} : {msg}")
 
 
 try:
@@ -68,6 +84,75 @@ except ImportError:
     print("    Install with:  pip install curl_cffi")
     print("    Or:            python -m pip install curl_cffi")
     sys.exit(2)
+
+
+# One curl_cffi session per worker thread (Session is NOT thread-safe).
+_thread_local = threading.local()
+
+
+def get_session(impersonate, proxy):
+    s = getattr(_thread_local, "session", None)
+    if s is None:
+        kwargs = {"impersonate": impersonate}
+        if proxy:
+            kwargs["proxies"] = {"http": proxy, "https": proxy}
+        s = requests.Session(**kwargs)
+        _thread_local.session = s
+    return s
+
+
+def drop_session():
+    """Force the current thread to build a fresh session after a failure."""
+    try:
+        _thread_local.session = None
+    except Exception:
+        pass
+
+
+def resolve_proxy(explicit):
+    """
+    Resolve the proxy to use, in priority order:
+      1. --proxy <url>            (explicit; 'auto'/'none'/'direct'/'off' keywords accepted)
+      2. HTTPS_PROXY / HTTP_PROXY / ALL_PROXY env vars
+      3. Windows system proxy (WinINET registry) — this is what Clash sets,
+         so CF-mode traffic can be routed through the same proxy as the rest.
+    Returns a proxy URL string or None (direct).
+    """
+    if explicit is not None:
+        val = explicit.strip()
+        low = val.lower()
+        if low in ("direct", "none", "off"):
+            return None
+        if val and low != "auto":
+            return val
+
+    for var in ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy"):
+        v = os.environ.get(var)
+        if v and v.strip():
+            return v.strip()
+
+    if os.name == "nt":
+        try:
+            import winreg
+            with winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+            ) as k:
+                enable, _ = winreg.QueryValueEx(k, "ProxyEnable")
+                if enable:
+                    server, _ = winreg.QueryValueEx(k, "ProxyServer")
+                    server = (server or "").strip()
+                    if "=" in server:
+                        parts = dict(p.split("=", 1) for p in server.split(";") if "=" in p)
+                        server = (parts.get("https") or parts.get("http") or "").strip()
+                    if server:
+                        if "://" not in server:
+                            server = "http://" + server
+                        return server
+        except Exception:
+            pass
+
+    return None
 
 
 def parse_args():
@@ -86,6 +171,17 @@ def parse_args():
                    help="Segment temp directory (default: cf_segments next to this script)")
     p.add_argument("--keep-segs", action="store_true",
                    help="Keep segment directory after successful merge; default is to auto-delete")
+    p.add_argument("--threads", type=int, default=16,
+                   help="Concurrent download threads (default: 16, capped at 64)")
+    p.add_argument("--retries", type=int, default=5,
+                   help="Retries per segment on failure (default: 5)")
+    p.add_argument("--proxy", default="auto",
+                   help="Proxy URL, e.g. http://127.0.0.1:7897 or socks5://127.0.0.1:7890. "
+                        "'auto' (default) reuses HTTPS_PROXY/HTTP_PROXY or the Windows system proxy; "
+                        "'direct' disables proxying")
+    p.add_argument("--overwrite", action="store_true",
+                   help="Ignore and re-download segments already present in the segment dir "
+                        "(default: resume — reuse existing *.ts files)")
     return p.parse_args()
 
 
@@ -282,6 +378,58 @@ def probe_media_info(seg_path, ffmpeg_cmd="ffmpeg"):
         pass
 
 
+def download_segment(index, url, seg_dir, headers, impersonate, proxy, max_retries, ffmpeg_cmd, probe_first, overwrite=False):
+    """
+    Download a single segment (with retries). Returns (index, path_or_None, error_str_or_None, resumed_bool).
+    Designed to run inside a worker thread; each thread keeps its own curl_cffi session.
+    If the segment file already exists (and --overwrite is not set) it is reused — this is
+    what makes an interrupted run resume instead of starting over.
+    """
+    dest = os.path.join(seg_dir, f"{index:05d}.ts")
+    tmp = dest + ".part"
+    err_msg = "unknown"
+
+    # Resume: skip segments already fully written by a previous (interrupted) run.
+    if not overwrite and os.path.exists(dest) and os.path.getsize(dest) > 0:
+        if probe_first:
+            probe_media_info(dest, ffmpeg_cmd)
+        return index, dest, None, True
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            session = get_session(impersonate, proxy)
+            resp = session.get(url, headers=headers, timeout=60)
+            if resp.status_code == 200:
+                # Write to a .part file first so a killed process never leaves a
+                # half-written file that a later run would wrongly treat as complete.
+                with open(tmp, "wb") as f:
+                    f.write(resp.content)
+                os.replace(tmp, dest)
+                if probe_first:
+                    probe_media_info(dest, ffmpeg_cmd)
+                return index, dest, None, False
+            err_msg = f"status={resp.status_code}"
+            Logger.warn(f"Segment {index + 1} attempt {attempt}/{max_retries} {err_msg}")
+        except Exception as e:
+            raw_err = str(e)
+            drop_session()
+            if "timed out" in raw_err.lower():
+                err_msg = "timeout (60s)"
+            else:
+                err_msg = raw_err[:50]
+            Logger.warn(f"Segment {index + 1} attempt {attempt}/{max_retries} error: {err_msg}")
+
+        if attempt < max_retries:
+            time.sleep(1)
+
+    try:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    except Exception:
+        pass
+    return index, None, err_msg, False
+
+
 def main():
     a = parse_args()
     out_dir = os.path.abspath(a.work_dir)
@@ -298,11 +446,49 @@ def main():
     # Auto-derive Referer if not explicitly passed
     referer = a.referer if a.referer else derive_referer(a.url)
 
-    # Segment temp directory: default next to this script (doesn't pollute user save dir)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    seg_dir = a.seg_dir if a.seg_dir else os.path.join(script_dir, "cf_segments")
+    # Segment temp directory: default inside the output ("save") directory so it
+    # lives next to the finished download instead of the executable/script folder.
+    seg_dir = a.seg_dir if a.seg_dir else os.path.join(out_dir, "cf_segments")
     seg_dir = os.path.abspath(seg_dir)
     os.makedirs(seg_dir, exist_ok=True)
+
+    # Resume manifest: remember which URL this segment dir belongs to so an
+    # interrupted task can be resumed. If the URL changed (or --overwrite),
+    # purge stale segments so we never mix two different videos.
+    manifest = os.path.join(seg_dir, "cf_manifest.txt")
+    prev_url = None
+    if os.path.exists(manifest):
+        try:
+            with open(manifest, "r", encoding="utf-8") as f:
+                prev_url = f.read().strip() or None
+        except Exception:
+            prev_url = None
+    if a.overwrite or (prev_url and prev_url != a.url):
+        stale = 0
+        try:
+            names = os.listdir(seg_dir)
+        except Exception:
+            names = []
+        for name in names:
+            if name.endswith(".ts") or name.endswith(".ts.part") or name == "list.txt":
+                try:
+                    os.remove(os.path.join(seg_dir, name))
+                    stale += 1
+                except Exception:
+                    pass
+        if stale:
+            Logger.info(f"Cleared {stale} stale segment file(s) from previous task.")
+    try:
+        with open(manifest, "w", encoding="utf-8") as f:
+            f.write(a.url)
+    except Exception:
+        pass
+
+    # Resolve proxy (explicit > env > Windows system proxy) and clamp thread count
+    proxy = resolve_proxy(a.proxy)
+    threads = max(1, min(a.threads if a.threads else 16, 64))
+    if a.threads and a.threads > 64:
+        Logger.warn(f"Requested {a.threads} threads; capped at 64 for stability.")
 
     s = requests.Session(impersonate=a.impersonate)
     headers = {"Referer": referer, "Accept": "*/*"}
@@ -315,6 +501,9 @@ def main():
     Logger.info(f"Target URL                 = {Colors.WHITE}{a.url}{Colors.RESET}")
     Logger.info(f"Referer Header             = {Colors.WHITE}{referer}{Colors.RESET}")
     Logger.info(f"CF Cookie Provided         = {'Yes' if a.cookie else 'No'}")
+    Logger.info(f"Proxy                      = {Colors.WHITE}{proxy if proxy else 'Direct (no proxy)'}{Colors.RESET}")
+    Logger.info(f"Concurrent Threads         = {Colors.BOLD}{threads}{Colors.RESET}")
+    Logger.info(f"Resume                     = {Colors.BOLD}{'Disabled (--overwrite)' if a.overwrite else 'Enabled (reuse *.ts in seg dir)'}{Colors.RESET}")
     Logger.info(f"Segment Temp Dir           = {seg_dir}")
     Logger.info(f"Final Output Dir           = {out_dir}")
     Logger.info(f"Post-Merge Cleanup         = {'Keep (keep-segs)' if a.keep_segs else 'Auto-Delete'}")
@@ -376,43 +565,43 @@ def main():
     Logger.info(f"Save Name: {out_name}")
     Logger.info("Start downloading...")
 
-    ts = []
-    max_retries = 5
-    for i, u in enumerate(segs):
-        d = os.path.join(seg_dir, f"{i:05d}.ts")
-        download_success = False
-        for attempt in range(1, max_retries + 1):
-            try:
-                rr = s.get(u, headers=headers, timeout=60)
-                if rr.status_code == 200:
-                    with open(d, "wb") as f:
-                        f.write(rr.content)
-                    ts.append(d)
-                    download_success = True
-                    # Probe media info on segment 1 download success (matching N_m3u8DL-RE!)
-                    if i == 0:
-                        probe_media_info(d, ff)
-                    break
+    max_retries = max(1, a.retries)
+    total = len(segs)
+    results = {}
+    failures = []
+    progress_lock = threading.Lock()
+    completed = 0
+    resumed_count = 0
+
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        futures = {
+            pool.submit(
+                download_segment, i, u, seg_dir, headers,
+                a.impersonate, proxy, max_retries, ff, (i == 0), a.overwrite,
+            ): i
+            for i, u in enumerate(segs)
+        }
+        for fut in as_completed(futures):
+            idx, path, err, resumed = fut.result()
+            with progress_lock:
+                completed += 1
+                if path:
+                    results[idx] = path
+                    if resumed:
+                        resumed_count += 1
                 else:
-                    err_msg = f"status={rr.status_code}"
-                    Logger.warn(f"Segment {i + 1}/{len(segs)} attempt {attempt}/{max_retries} {err_msg}")
-            except Exception as e:
-                raw_err = str(e)
-                # Shorten long libcurl timeout messages
-                if "timed out" in raw_err.lower():
-                    err_msg = "timeout (60s)"
-                else:
-                    err_msg = raw_err[:50]
-                Logger.warn(f"Segment {i + 1}/{len(segs)} attempt {attempt}/{max_retries} error: {err_msg}")
-            time.sleep(1)
+                    failures.append(idx)
+                print_progress(completed, total)
 
-        if not download_success:
-            Logger.error(f"Segment {i + 1} failed after {max_retries} attempts. Proceeding to merge downloaded segments...")
-            break
+    ts = [results[i] for i in sorted(results)]
+    Logger.info(f"Downloaded {len(ts)}/{total} segment(s)")
+    if resumed_count:
+        Logger.info(f"Reused {resumed_count} segment(s) from previous run (resume).")
+    if failures:
+        preview = ", ".join(str(i + 1) for i in sorted(failures)[:20])
+        more = "" if len(failures) <= 20 else f" (+{len(failures) - 20} more)"
+        Logger.warn(f"Failed segments: {preview}{more}")
 
-        print_progress(i + 1, len(segs))
-
-    Logger.info(f"Downloaded {len(ts)}/{len(segs)} segment(s)")
     if not ts:
         Logger.error("No segments were downloaded successfully.")
         sys.exit(1)
