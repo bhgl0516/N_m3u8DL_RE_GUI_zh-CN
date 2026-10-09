@@ -15,10 +15,11 @@
 | --- | --- | --- |
 | 简体中文化 | `MainWindow.xaml`（约 298 条 UI 串）、`MainWindow.xaml.cs`、`ViewModels/MainViewModel.cs`、`App.xaml.cs`、`Services/DownloadService.cs`、`Views/StreamPickerWindow.xaml` | UI 文案与运行期提示全部汉化 |
 | 字体功能 | `MainWindow.xaml`、`MainWindow.xaml.cs`、`StreamPickerWindow.xaml`、`Services/MainWindowConfigMapper.cs`、`N_m3u8DL_RE_GUI.csproj` | 新增字体选择 / 导入功能；根窗口 `FontSize="15"`（较上游 +2）；可选用内嵌「京華老宋体-GJ」 |
-| Cloudflare 绕过脚本重写 | `m3u8_cf_bypass.py` | 自动代理 / 并发 / 断点续传 / UTF-8 输出修复 |
+| Cloudflare 绕过脚本重写 | `m3u8_cf_bypass.py` | 并发 / 断点续传 / UTF-8 输出修复；代理交由 GUI 开关控制 |
 | CF 命令构造 | `N_m3u8DL_RE_GUI.Core/CfCommandBuilder.cs` | `CfCommandOptions` 新增 `Threads`、`Proxy`，拼接 `--threads` / `--proxy` |
 | CF 分片目录 | `MainWindow.xaml.cs`（`BuildCfOptions`） | 分片目录固定为 `保存目录\cf_segments` |
 | 日志防卡死 | `MainWindow.xaml.cs`（`AppendLog`/`FlushLog`） | 缓冲上限 `MaxLogChars=80000` + 200ms 刷新节流 |
+| 代理开关 | `MainWindow.xaml`、`MainWindow.xaml.cs`、`Services/MainWindowConfigMapper.cs` | 新增「使用代理」开关（默认直连）；代理地址可编辑、自动记忆 |
 | B 站支持 | `MainWindow.xaml.cs`、`N_m3u8DL_RE_GUI.csproj`、`yt-dlp.exe`（新增） | 识别 B 站输入并调用 yt-dlp 下载 |
 | 发布配置 | `N_m3u8DL_RE_GUI.csproj` | 4 个外部依赖设 `CopyToPublishDirectory` + `ExcludeFromSingleFile` |
 | 版本号 | `Directory.Build.props` | `<AppVersion>` 2.1.5 → 2.1.6 |
@@ -68,7 +69,7 @@
 
 在上游脚本基础上重写，新增 / 强化：
 
-- **自动代理**：`--proxy auto` 时按 显式参数 → 环境变量（`HTTPS_PROXY`/`HTTP_PROXY`/`ALL_PROXY` 等）→ Windows 注册表（`Internet Settings`）顺序解析，可自动命中 Clash `http://127.0.0.1:7897`。
+- **代理交给 GUI（默认直连）**：CF 脚本的 `--proxy` 由 GUI 代理开关决定——不勾选「使用代理」时传 `direct`（强制直连）；勾选时传用户填写的地址；勾选但留空时传 `auto`（按 环境变量 `HTTPS_PROXY`/`HTTP_PROXY`/`ALL_PROXY` → Windows 注册表 `Internet Settings` 顺序自动探测）。脚本自身不再假定任何具体地址。
 - **并发下载**：`--threads`（默认 16，上限 64），`ThreadPoolExecutor`，每线程独立 `curl_cffi` Session。
 - **断点续传**：默认复用已下载的 `*.ts`；`.part` 原子写（`os.replace`）；`cf_manifest.txt` 记录播放列表 URL，URL 变更时自动清空旧分片；`--overwrite` 强制重下。
 - **分片目录**：`--seg-dir`，默认 `输出目录\cf_segments`。
@@ -102,6 +103,14 @@ string Proxy);    // 新增
 - `N_m3u8DL_RE_GUI.csproj`：`N_m3u8DL-RE.exe` / `ffmpeg.exe` / `m3u8_cf_bypass.py` / `yt-dlp.exe` 统一设
   `CopyToPublishDirectory=PreserveNewest` + `ExcludeFromSingleFile=true`（不塞进单文件 exe，与主程序同目录）。
 - `Directory.Build.props`：`<AppVersion>` 由 2.1.5 提升为 2.1.6。
+
+## 7. 代理开关（默认直连）
+
+- **界面新增**：网络标签页「请求与代理」中新增 `CheckBox_UseProxy`（「使用代理」，默认不勾选）与可编辑的 `TextBox_Proxy` 代理地址栏。
+- **默认直连**：不勾选时不使用任何代理（N_m3u8DL-RE 不传 `--custom-proxy`；CF 脚本传 `--proxy direct`；yt-dlp 传 `--proxy ""`），地址栏置灰。
+- **统一生效**：开关同时作用于 N_m3u8DL-RE、Cloudflare 绕过脚本与 B 站 yt-dlp 三个下载路径。
+- **自动记忆**：代理地址与开关状态分别以 `代理`（base64）与 `使用代理` 键写入 `config.json`，下次启动自动还原。
+- **实现**：`MainWindow.xaml.cs` 新增 `UseProxyEnabled` / `EffectiveProxyUrl()` / `CfEffectiveProxy()` 辅助方法；`MainWindowConfigMapper` 负责持久化。
 
 ---
 

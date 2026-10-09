@@ -616,9 +616,7 @@
                                     <CheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckBox_DisableDate" AutomationProperties.Name="不写入日期信息" Style="{StaticResource CheckBoxStyle}"
                                               Content="不写入日期" ToolTip="封装时不写入日期信息"
                                               Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
-                                    <CheckBox Grid.Row="0" Grid.Column="2" x:Name="CheckBox_DisableProxy" AutomationProperties.Name="禁用系统代理" Style="{StaticResource CheckBoxStyle}"
-                                              Content="不使用系统代理" ToolTip="禁用系统代理"
-                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    
                                     
                                     <CheckBox Grid.Row="1" Grid.Column="0" x:Name="CheckBox_ParserOnly" AutomationProperties.Name="仅解析，跳过下载" Style="{StaticResource CheckBoxStyle}"
                                               Content="跳过下载" ToolTip="仅解析，不下载"
@@ -698,10 +696,20 @@
                                          ToolTip="覆盖相对路径的基础链接"/>
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="代理" Style="{StaticResource LabelStyle}" Margin="0,8,8,0"/>
-                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBox_Proxy" Style="{StaticResource TextBoxStyle}" 
-                                         TextChanged="TextChanged" Margin="0,8,0,0"
-                                         AutomationProperties.Name="代理地址"
-                                         ToolTip="HTTP/SOCKS5 代理（例如 http://127.0.0.1:8080）"/>
+                                <Grid Grid.Row="2" Grid.Column="1" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox Grid.Column="0" x:Name="CheckBox_UseProxy" AutomationProperties.Name="使用代理" VerticalAlignment="Center" Margin="0,0,8,0"
+                                              Style="{StaticResource CheckBoxStyle}"
+                                              Content="使用代理" ToolTip="勾选后按右侧地址走代理；不勾选（默认）直接连接，不使用任何代理"
+                                              Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"/>
+                                    <TextBox Grid.Column="1" x:Name="TextBox_Proxy" Style="{StaticResource TextBoxStyle}"
+                                             TextChanged="TextChanged"
+                                             AutomationProperties.Name="代理地址"
+                                             ToolTip="HTTP/SOCKS5 代理（例如 http://127.0.0.1:8080）；勾选“使用代理”但留空时使用系统代理"/>
+                                </Grid>
                             </Grid>
                         </GroupBox>
 

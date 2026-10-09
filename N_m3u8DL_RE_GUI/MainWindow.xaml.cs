@@ -186,12 +186,42 @@ namespace N_m3u8DL_RE_GUI
             textBox.Tag = isValid ? null : "invalid";
         }
 
+        /// <summary>True when the user opted in to a proxy ("使用代理"). Default off → direct connection.</summary>
+        private bool UseProxyEnabled => CheckBox_UseProxy?.IsChecked == true;
+
+        /// <summary>
+        /// Effective proxy URL for N_m3u8DL-RE. Null means "no explicit proxy" (direct,
+        /// or system proxy when the user enabled the proxy but left the field empty).
+        /// </summary>
+        private string? EffectiveProxyUrl()
+        {
+            if (!UseProxyEnabled) return null;
+            var url = TextBox_Proxy?.Text?.Trim();
+            return string.IsNullOrWhiteSpace(url) ? null : url;
+        }
+
+        /// <summary>
+        /// Effective --proxy value for m3u8_cf_bypass.py: "direct" when the proxy is off,
+        /// the configured URL when set, or "auto" (env/registry auto-detect) when the
+        /// user enabled the proxy but left the field empty.
+        /// </summary>
+        private string CfEffectiveProxy()
+        {
+            if (!UseProxyEnabled) return "direct";
+            var url = TextBox_Proxy?.Text?.Trim();
+            return string.IsNullOrWhiteSpace(url) ? "auto" : url;
+        }
+
         private void RefreshValidationState(object? sender = null)
         {
             if (sender == null || sender == TextBox_URL)
                 ApplyValidationState(TextBox_URL, TextBox_URL == null || InputValidation.IsLikelyValidInput(TextBox_URL.Text));
             if (sender == null || sender == TextBox_Proxy)
-                ApplyValidationState(TextBox_Proxy, TextBox_Proxy == null || InputValidation.IsValidProxy(TextBox_Proxy.Text));
+                ApplyValidationState(TextBox_Proxy,
+                    !UseProxyEnabled
+                    || TextBox_Proxy == null
+                    || string.IsNullOrWhiteSpace(TextBox_Proxy.Text)
+                    || InputValidation.IsValidProxy(TextBox_Proxy.Text));
             if (sender == null || sender == TextBox_EXE)
                 ApplyValidationState(TextBox_EXE, TextBox_EXE == null || string.IsNullOrWhiteSpace(TextBox_EXE.Text) || File.Exists(TextBox_EXE.Text));
         }
@@ -229,8 +259,8 @@ namespace N_m3u8DL_RE_GUI
                 CustomHLSMethod = GetComboValue(Combo_CustomHLSMethod),
                 
                 // Network
-                Proxy = TextBox_Proxy.Text?.Trim(),
-                UseSystemProxy = CheckBox_DisableProxy?.IsChecked != true,
+                Proxy = EffectiveProxyUrl(),
+                UseSystemProxy = UseProxyEnabled && EffectiveProxyUrl() == null,
                 
                 // Time Range
                 RangeStart = TextBox_RangeStart.Text,
@@ -353,8 +383,8 @@ namespace N_m3u8DL_RE_GUI
                 CustomHLSMethod = GetComboValue(Combo_CustomHLSMethod),
 
                 // Network
-                Proxy = TextBox_Proxy.Text?.Trim(),
-                UseSystemProxy = CheckBox_DisableProxy?.IsChecked != true,
+                Proxy = EffectiveProxyUrl(),
+                UseSystemProxy = UseProxyEnabled && EffectiveProxyUrl() == null,
 
                 // Time Range
                 RangeStart = TextBox_RangeStart.Text,
@@ -489,6 +519,15 @@ namespace N_m3u8DL_RE_GUI
             {
                 if (control != null)
                     control.IsEnabled = bypassCf;
+            }
+
+            // Proxy URL only matters when the user opted in ("使用代理").
+            if (TextBox_Proxy != null)
+            {
+                TextBox_Proxy.IsEnabled = UseProxyEnabled;
+                TextBox_Proxy.ToolTip = UseProxyEnabled
+                    ? "HTTP/SOCKS5 代理（例如 http://127.0.0.1:7897）；留空则自动探测环境变量 / 系统代理。"
+                    : "未启用代理：直连。勾选「使用代理」后可填写代理地址。";
             }
         }
 
@@ -1226,7 +1265,7 @@ namespace N_m3u8DL_RE_GUI
                     "缺少输入", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (!InputValidation.IsValidProxy(TextBox_Proxy.Text))
+            if (UseProxyEnabled && !string.IsNullOrWhiteSpace(TextBox_Proxy?.Text) && !InputValidation.IsValidProxy(TextBox_Proxy.Text))
             {
                 MessageBox.Show(
                     "代理必须以 http:// 或 socks5:// 开头。",
@@ -1633,6 +1672,12 @@ namespace N_m3u8DL_RE_GUI
             args.Append(" --newline");
             args.Append(" --no-mtime");
 
+            // Proxy: off → force direct; on → explicit URL; on+blank → let yt-dlp use env/system.
+            if (!UseProxyEnabled)
+                args.Append(" --proxy \"\"");
+            else if (!string.IsNullOrWhiteSpace(TextBox_Proxy?.Text))
+                args.Append($" --proxy \"{TextBox_Proxy!.Text.Trim()}\"");
+
             int ytThreads = int.TryParse(TextBox_Max?.Text, out var ytT) && ytT > 0 ? ytT : 16;
             if (ytThreads > 64) ytThreads = 64;
             args.Append($" --concurrent-fragments {ytThreads}");
@@ -1699,7 +1744,7 @@ namespace N_m3u8DL_RE_GUI
                     : "chrome",
                 KeepSegments: CheckBox_CFKeepSegs?.IsChecked == true,
                 Threads: int.TryParse(TextBox_Max?.Text, out var cfThreads) && cfThreads > 0 ? cfThreads : 16,
-                Proxy: TextBox_Proxy?.Text?.Trim() ?? string.Empty);
+                Proxy: CfEffectiveProxy());
         }
 
         /// <summary>

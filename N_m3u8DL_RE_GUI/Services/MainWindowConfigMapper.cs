@@ -29,7 +29,7 @@ internal static class MainWindowConfigMapper
         state.Set("超时秒数", window.TextBox_Timeout.Text);
         state.Set("最大速度", window.TextBox_MaxSpeed.Text);
         state.Set("不合并", Flag(window.CheckBox_DisableMerge.IsChecked == true));
-        state.Set("不使用系统代理", Flag(window.CheckBox_DisableProxy.IsChecked == true));
+            state.Set("使用代理", Flag(window.CheckBox_UseProxy?.IsChecked == true));
         state.Set("仅合并音频", Flag(window.CheckBox_AudioOnly.IsChecked == true));
         state.Set("不检查分片", Flag(window.CheckBox_DisableCheck.IsChecked == true));
         state.Set("并发下载", Flag(window.CheckBox_Concurrent.IsChecked == true));
@@ -109,7 +109,7 @@ internal static class MainWindowConfigMapper
         RestoreTextBox(window.TextBox_Timeout, config.Get("超时秒数"));
         RestoreTextBox(window.TextBox_MaxSpeed, config.Get("最大速度"));
         RestoreCheckBox(window.CheckBox_DisableMerge, config.Get("不合并"));
-        RestoreCheckBox(window.CheckBox_DisableProxy, config.Get("不使用系统代理"));
+            RestoreCheckBox(window.CheckBox_UseProxy, config.Get("使用代理"));
         RestoreCheckBox(window.CheckBox_AudioOnly, config.Get("仅合并音频"));
         RestoreCheckBox(window.CheckBox_DisableCheck, config.Get("不检查分片"));
         RestoreCheckBox(window.CheckBox_Concurrent, config.Get("并发下载"));

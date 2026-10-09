@@ -142,13 +142,13 @@ flowchart LR
 
 - `SegDir` = `保存目录\cf_segments`；
 - `Threads` = 最大并发数（`TextBox_Max`，默认 16）；
-- `Proxy` = `TextBox_Proxy`；
+- `Proxy` = `CfEffectiveProxy()`（不勾选「使用代理」→ `direct`；勾选 → 用户地址；勾选但留空 → `auto`）；
 - `Impersonate` = `Combo_CFImpersonate`（默认 chrome）；
 - `KeepSegments` = `CheckBox_CFKeepSegs`；
 - `Referer` = `TextBox_CFReferer`（否则由 URL 推导）。
 
 `CfCommandBuilder` 生成命令行 → `BuildBatchScript` 生成 UTF-8 的 `.bat` → 写入 `%TEMP%\cf_dl_<ts>.bat` → `DownloadService.StartProcessAsync` 运行。
-脚本内部：自动代理（env / Windows 注册表 → Clash `http://127.0.0.1:7897`）、并发分片下载（`ThreadPoolExecutor`，每线程独立 `curl_cffi` Session）、断点续传（复用 `*.ts`、`.part` 原子写、`cf_manifest.txt` URL 变更自动清空）。
+脚本内部：代理交由 GUI 开关控制（`direct` 直连 / 用户地址 / `auto` 自动探测 env + Windows 注册表）、并发分片下载（`ThreadPoolExecutor`，每线程独立 `curl_cffi` Session）、断点续传（复用 `*.ts`、`.part` 原子写、`cf_manifest.txt` URL 变更自动清空）。脚本不再硬编码任何具体代理地址。
 
 ### 4.4 断点续传
 
@@ -181,6 +181,7 @@ flowchart TD
 | `ApplyFontSource` | — | 应用字体源到根窗口（失败回退 `Microsoft YaHei UI`） |
 | `Button_ImportFont_Click` | — | 导入本地 `.ttf/.otf/.ttc` 并应用 |
 | `Combo_UIFont_SelectionChanged` | — | 下拉选择字体并应用 |
+| `UseProxyEnabled` / `EffectiveProxyUrl()` / `CfEffectiveProxy()` | — | 代理开关（默认直连）与各引擎的有效代理取值 |
 | `CheckForResumableJob` | 769 | 启动续传检测 |
 | `Button_ResumeJob_Click` | 827 | 执行续传 |
 | `ImportFromHar` | 648 | 导入 HAR |

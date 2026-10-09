@@ -11,7 +11,7 @@
 > Changes relative to upstream:
 > - **Full Simplified-Chinese localization**: UI, menus, logs and error dialogs in Simplified Chinese; global font size +2;
 > - **Selectable / importable UI font**: switch system fonts from the toolbar or import a local `.ttf`/`.otf`/`.ttc` (optional embedded「京華老宋体-GJ」);
-> - **Cloudflare bypass script rewritten**: auto proxy (incl. Clash `127.0.0.1:7897`), multi-threaded concurrency, resume, UTF-8 output fix;
+> - **Cloudflare bypass script rewritten**: user-defined proxy (set and remembered in the GUI, direct by default), multi-threaded concurrency, resume, UTF-8 output fix;
 > - **Bilibili support**: bundled `yt-dlp` download (BV/av/b23 links);
 > - **Log anti-freeze**: ring buffer + throttled flushing.
 >
@@ -186,13 +186,26 @@ Use the companion browser extension **N-RE Stream Bridge** in `extension/` for 1
 > [!NOTE]
 > **Stream Coverage & Privacy:** Supports **HLS** (`.m3u8`), **DASH** (`.mpd`), **Smooth Streaming** (`.ism`/`/Manifest`), **Abyss/Hydrax**, standalone audio (`.m4a`, `.opus`, `.flac`, `.wav`, `.aac`, `.mp3`), and progressive formats (`.mp4`, `.m4v`, `.webm`, `.mkv`, etc.). Automatically suppresses segment flooding to keep manifests visible, shows live file sizes and confidence badges, probes stream renditions strictly on demand, and uses memory-backed `chrome.storage.session` so sensitive cookies are never written unencrypted to disk.
 
+### How to use a proxy (direct by default)
+
+The proxy URL is **editable in the GUI and remembered automatically**; the "Use Proxy" toggle applies to all three download engines (N_m3u8DL-RE, the Cloudflare-bypass script, and the Bilibili yt-dlp engine):
+
+1. Open the **Network tab (🌐)** → **Request & Proxy** group.
+2. Tick **使用代理 (Use Proxy)** and enter a proxy URL on the right (e.g. `http://127.0.0.1:7897`, `socks5://127.0.0.1:7890`).
+3. **Left unticked (default) means a direct connection** with no proxy; the proxy field is disabled while unticked.
+4. The URL is saved to `config.json` and restored on the next launch.
+5. Ticked but empty: N_m3u8DL-RE and yt-dlp use the system proxy, and the CF script auto-detects (env vars / system proxy).
+
+> [!NOTE]
+> Unlike upstream, this build **no longer hard-codes any proxy address** (Clash `127.0.0.1:7897` is only an example). Enter the value that matches your own environment.
+
 ### How to use Cloudflare Bypass
 
 If a website is blocking you with Cloudflare, open the **Network tab (🌐)** and find the **⚡ Cloudflare Bypass (curl_cffi)** section:
 1. Tick **Enable Cloudflare Bypass**.
 2. Choose a **TLS fingerprint** (default `chrome`; also `chrome131`, `chrome120`, `edge101`, `safari17_0`).
 3. (Optional) Enter a `Referer` or `CF Cookie` — or click **📋 Paste from browser** to fill them from the extension.
-4. (Optional) Set a **Proxy**. Leave it empty for auto-detection: the script looks at the `HTTP(S)_PROXY`/`ALL_PROXY` environment variables, then the Windows system proxy, and can recognise Clash at `http://127.0.0.1:7897`. Fill in `direct`/`none` to disable any proxy.
+4. (Optional) **Proxy**: tick **使用代理** and enter a proxy URL (e.g. `http://127.0.0.1:7897`, `socks5://127.0.0.1:7890`); the URL is remembered. **Left unticked (default) means a direct connection with no proxy.** Ticked but empty falls back to auto-detection (env vars / system proxy). This toggle also applies to N_m3u8DL-RE and the Bilibili yt-dlp engine.
 5. (Optional) The segment **thread count** is taken from "Max Download Threads" (default 16, capped at 64).
 6. (Optional) Tick **Keep segment files** to keep the merged segments.
 7. Click **▶ GO**. The GUI generates a `.bat` that runs `python m3u8_cf_bypass.py`; segments are saved to `<saveDir>\cf_segments` and merged with `ffmpeg` into `<saveName>.mp4`.
@@ -236,7 +249,7 @@ The top toolbar has a **字体 (Font)** dropdown and an **导入 (Import)** butt
 - **Universal Stream Capture** - 1-click **⬇ Download** over Native Messaging, paste browser cURL commands directly, drag-and-drop `.har` captures with automated stream ranking and picking, or use the **N-RE Stream Bridge** browser extension. Every capture starts clean: the decryption key, Cloudflare bypass, and TLS profile are reset, so nothing carries over from the previous stream; your own proxy setting is kept.
 - **Resume Interrupted Downloads** - Automatically derives deterministic temp directories (`<saveDir>/.nre-tmp/<saveName>`) and persists active job metadata. On startup, detects unfinished downloads with saved segments, offers a 1-click resume workflow with a fresh stream link, or clean discards.
 - **Native Abyss / Hydrax Downloader** - Built-in zero-dependency C# crypto engine that decrypts and reassembles fragmented chunks from `abysscdn.com`, `playhydrax.com`, `zplayer.io`, and `short.ink`. Verifies chunk sizes on disk and resumes a stopped or interrupted download from its exact byte offset instead of restarting, with honest cancellation reporting and accurate live progress tracking. Videos offered in several qualities open a quality picker (largest first).
-- **Hardened Cloudflare WAF Bypass** - Multi-threaded segment downloader (`curl_cffi`, one session per thread), browser fingerprint impersonation, automatic proxy detection (env vars → Windows system proxy → Clash `127.0.0.1:7897`), UTF-8 output fix, and automatic segment resume from a deterministic per-download job directory (re-running the same URL and Save Name skips segments already on disk). Final assembly is done with `ffmpeg`. This build downloads plain HLS directly — there is no engine selector or `--serve` proxy.
+- **Hardened Cloudflare WAF Bypass** - Multi-threaded segment downloader (`curl_cffi`, one session per thread), browser fingerprint impersonation, user-defined proxy (set and remembered in the GUI, with a "no proxy" direct mode), UTF-8 output fix, and automatic segment resume from a deterministic per-download job directory (re-running the same URL and Save Name skips segments already on disk). Final assembly is done with `ffmpeg`. This build downloads plain HLS directly — there is no engine selector or `--serve` proxy.
 - **3-Zone Modern UX/UI Architecture** - Clean layout with a top URL hero bar, a 6-Tab sidebar (`📦 Download`, `🌐 Network`, `🔒 Security`, `🎬 Media`, `📡 Live`, `⚙️ Advanced`), and a fixed command preview bar at the bottom.
 - **GUI Auto-Update Engine** - Zero rate-limit HTTP update checker. If a new version is released, a green pill badge (`🎉 vX.X.X Available!`) will appear at the top.
 - **Simplified-Chinese Interface** - The GUI is fully Simplified Chinese. A separate **Downloader Language** control sets the language of the N_m3u8DL-RE console output (`--ui-language`, `(Default)` / `en-US` / `zh-CN` / `zh-TW`) and does not affect the GUI.
@@ -258,7 +271,7 @@ The top toolbar has a **字体 (Font)** dropdown and an **导入 (Import)** butt
 - **Stream Selection (Regex)** - Select or drop video/audio/subtitle streams by standard regex.
 - **Time Range** - Download specific portions of a stream (e.g., `00:05:00-00:10:00`).
 - **Speed Limit** - Set a maximum download speed to avoid throttling.
-- **Custom Proxy** - Support for HTTP and SOCKS5 proxies.
+- **Custom Proxy (Direct by Default)** - Support for HTTP and SOCKS5 proxies; the proxy URL is entered in the GUI and remembered automatically. It only takes effect when **使用代理 (Use Proxy)** is ticked; otherwise the connection is direct.
 
 ### Muxing and Output
 - **Mux After Done** - Automatically mux video and audio to `.mp4` or `.mkv` with `ffmpeg`.
